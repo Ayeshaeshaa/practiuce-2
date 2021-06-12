@@ -1,0 +1,909 @@
+<div class="bg-login min-vh-100 align-items-xl-center pt-md-5 py-3 pt-xl-0">
+    <div class="container login-container">
+        <div class="login-card d-sm-flex">
+            <div class="login-right-panel bg-white mb-3 mb-sm-0 rounded-right order-sm-2 p-sm-5 p-4">
+                <h2 data-aos="zoom-out" class="heading text-center font-weight-bold mb-3">Login</h2>
+                <div class="input-group mb-4" [formGroup]="LoginByCellNumberForm">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon1">+92</span>
+                    </div>
+                    <input type="text" class="form-control" placeholder="Mobile number "
+                        [(ngModel)]="LoginByNoUserLoginInfo.CellNumber" formControlName="CellNumber"
+                        aria-label="Username" aria-describedby="basic-addon1"
+                        (paste)="inputValidations.OnlyNumberAllowedPasteValidation($event)"
+                        (keypress)="inputValidations.NumberValidation($event)" [maxLength]="10"
+                        (keyup.enter)="LoginByPhoneNo()">
+                    <div class="w-100"
+                        *ngIf="LoginByCellNumberForm.controls.CellNumber.errors!=null && LoginByCellNumberForm.controls.CellNumber.errors && (LoginByCellNumberForm.controls.CellNumber.touched || LoginByCellNumberForm.controls.CellNumber.dirty)">
+                        <div class="invalid-feedback d-block"
+                            *ngIf="LoginByCellNumberForm.controls.CellNumber.errors?.required ">
+                            Enter cell number.
+                        </div>
+                        <div class="invalid-feedback d-block"
+                            *ngIf="LoginByCellNumberForm.controls.CellNumber.errors?.pattern">
+                            Enter valid mobile number e.g. 3XXXXXXXXX
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-block mt-2" (click)="LoginByPhoneNo()">Continue</button>
+                <div class="divider-or">
+                    <span>OR</span>
+                </div>
+
+                              <div [formGroup]="LoginByMRNForm">
+                                    <div class="form-group">
+                                            <label class="input-label">MRN<span class="text-dange">*</span></label>
+                                            <input type="email" class="form-control" placeholder="MRN" formControlName="MRN" [(ngModel)]="UserLoginInfo.MRN" (paste)="inputValidations.OnlyNumberAllowedPasteValidation($event)" (keypress)="inputValidations.NumberValidation($event)" (keyup.enter)="UserLoginInfo.isMRN=true;LoginByMRN()" [maxLength]="12">
+                                            <div *ngIf="LoginByMRNForm.controls.MRN.errors!=null && LoginByMRNForm.controls.MRN.errors && (LoginByMRNForm.controls.MRN.touched || LoginByMRNForm.controls.MRN.dirty)">
+                                                    <div class="invalid-feedback d-block" *ngIf="LoginByMRNForm.controls.MRN.errors?.required ">
+                                                            Enter MRN.                             
+                                                        </div>
+                                             </div>
+                                    </div>
+                                    <div class="form-group mb-0">
+                                        <label class="input-label">Password<span class="text-dange">*</span></label>
+                                        <input type="password" class="form-control" placeholder="Password" formControlName="Password" [(ngModel)]="UserLoginInfo.password" [maxLength]="30" (keyup.enter)="UserLoginInfo.isMRN=true;LoginByMRN()">
+                                        <div *ngIf="LoginByMRNForm.controls.Password.errors!=null && LoginByMRNForm.controls.Password.errors && (LoginByMRNForm.controls.Password.touched || LoginByMRNForm.controls.Password.dirty)">
+                                                <div class="invalid-feedback d-block" *ngIf="LoginByMRNForm.controls.Password.errors?.required ">
+                                                        Enter password.                             
+                                                    </div>
+                                         </div>
+                                    </div>
+                                </div>
+                     
+
+
+                <div class="d-flex justify-content-between my-4">
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="stay-loggedin" [(ngModel)]="UserLoginInfo.rememberMe">
+                        <label class="form-check-label" for="stay-loggedin">Remember me</label>
+                    </div>
+
+                    <div>
+                        <a  href="javascript:void(0)" (click)="showForgotPasswordModel()" >Forgot password?</a>
+                    </div>
+                </div>
+
+
+
+                <button class="btn btn-outline-primary btn-block"
+                    (click)="UserLoginInfo.isMRN=true;LoginByMRN()">Login</button>
+
+
+
+                <div class="mt-4 text-center">
+                    Don't have an account yet? <a type="button" class="text-primary"
+                        (click)="isLogin=false;otpVerification.isTrue=false;showCellNumberModal()">Sign up</a>
+                </div>
+
+            </div>
+            <div class="login-left-panel rounded-left">
+                <a class="navbar-brand pl-4 mb-3 mb-sm-0" (click)="routeHomePage()"><img class="img-fluid" width="180"
+                        src="../../../assets/images/CareClinic_logo.svg" alt="talkMD Logo"></a>
+                <div class="login_artboard text-center"><img class="img-fluid"
+                        src="../../../assets/images/login_artboard.png"></div>
+                <div class="text-center">
+                    <h1 class="font-weight-bold">Getting the care you need</h1>
+                    <h3 class="text-primary">Has never been this easy!</h3>
+                </div>
+            </div>
+
+
+
+
+        </div>
+
+
+
+    </div>
+
+
+
+
+    <!--Signup Modal-->
+    <div bsModal #SignUpModal="bs-modal" class="modal fade" id="Modal-Signup" tabindex="-1" role="dialog"
+        aria-labelledby="" data-backdrop="static">
+        <div class="modal-dialog  modal-dialog-centered modal-lg modal-dialog-scrollable"  role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                        <img alt="talkMD Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="150">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                        (click)="hideSignUpModal()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div  [formGroup]="registertUserForm">
+                     <div class="row">
+                        <div class="col-lg-4">
+                         <div class="bg-light mb-3 mb-lg-0 p-4 rounded text-center">
+                                <div class="patient_avatar mb-3 text-center">
+                                    <img class="img-fluid m-auto profile-img rounded-circle" (click)="OpenCameraSetting()" [src]="doctorprofileimage">
+                                </div>
+                                <div class=" text-center">
+                                    <div class="btn-group avatar-btn" role="group" aria-label="Basic example">
+                                        <button type="button" data-toggle="modal"
+                                            title="Take Profile Picture From Camera" (click)="OpenCameraSetting()"
+                                            class="btn btn-outline-primary"><i aria-hidden="true"
+                                                class="fa fa-camera"></i></button>
+
+                                        <button type="button" class="btn btn-outline-primary rounded-right">
+                                            <label data-toggle="modal" for="profilePic" class="mb-0 align-self-center"
+                                                title="Upload Profile Picture"><i class="fas fa-image"></i></label>
+                                        </button>
+
+
+                                        <input id="profilePic" style="display:none" type="file"
+                                            (change)="onfileUpload($event)">
+                                    </div>
+                                </div>
+                       
+                       
+                        </div>
+                        </div>
+
+
+
+                        <div class="col-lg-8">
+                        <div class="form-row">
+                        <div class="col-md-6">
+                                <div class="form-group">
+                                        <label  class="input-label">First Name<span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" placeholder="First name" (paste)="inputValidations.NamePasteValidation($event)" [(ngModel)]="patientProfile.FirstName" formControlName="First_Name" (keypress)="inputValidations.restrictFirstSpace($event);inputValidations.NameValidation($event)" [maxLength]="35" >
+                                        <div *ngIf="registertUserForm.controls.First_Name.errors  &&  (registertUserForm.controls.First_Name.touched || registertUserForm.controls.First_Name.dirty)"
+                                            class="invalid-feedback d-block">
+                                            <div *ngIf="registertUserForm.controls.First_Name.errors?.required">
+                                                Please enter first name.
+                                            </div>
+                                            <div *ngIf="(registertUserForm.controls.First_Name.errors?.pattern)"
+                                                class="invalid-feedback d-block">
+                                                Please enter valid first name.
+                                            </div>
+                                        </div>
+                                    </div>
+                        </div>
+                        <div class="col-md-6">
+                                <div class="form-group">
+                                        <label  class="input-label">Last name<span class="text-dange">*</span></label>
+                                        <input type="text" class="form-control" placeholder="Last name" [(ngModel)]="patientProfile.LastName" (paste)="inputValidations.NamePasteValidation($event)" formControlName="Last_Name" (keypress)="inputValidations.restrictFirstSpace($event);inputValidations.NameValidation($event)" [maxLength]="35" >
+                                        <div *ngIf="registertUserForm.controls.Last_Name.errors  &&  (registertUserForm.controls.Last_Name.touched || registertUserForm.controls.Last_Name.dirty)"
+                                        class="invalid-feedback d-block">
+                                        <div *ngIf="registertUserForm.controls.Last_Name.errors?.required">
+                                            Please enter last name.
+                                        </div>
+                                        <div *ngIf="(registertUserForm.controls.Last_Name.errors?.pattern)"
+                                            class="invalid-feedback d-block">
+                                            Please enter valid last name.
+                                        </div>
+                                    </div>
+                                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                    <div class="form-group">
+                                            <label  class="input-label">Age<span class="text-dange">*</span></label>
+                                            <input type="text" class="form-control" (change)="checkAgeValidation()" placeholder="Age in years" [(ngModel)]="patientProfile.PatientAge" formControlName="Age" [maxLength]="3" (paste)="inputValidations.OnlyNumberAllowedPasteValidation($event)" (keypress)="inputValidations.NumberValidation($event)" >
+                                            <div *ngIf="registertUserForm.controls.Age.errors!=null && registertUserForm.controls.Age.errors && (registertUserForm.controls.Age.touched || registertUserForm.controls.Age.dirty)">
+                                                    <div class="invalid-feedback d-block" *ngIf="registertUserForm.controls.Age.errors?.required ">
+                                                            Enter Age.                             
+                                                        </div>
+                                             </div>
+                                             <div *ngIf="dobMaxCheck" class="invalid-feedback d-block">
+                                                Please enter valid age.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                                <label class="input-label">Gender
+                                                    <span class="text-dange">*</span>
+                                                </label>
+                                                <select class="form-control" formControlName="Gender"
+                                                    [(ngModel)]="patientProfile.PatientGender">
+                                                    <option value="" hidden selected>Select gender</option>
+                                                    <option value="Male">Male</option>
+                                                    <option value="Female">Female</option>
+                                                    <option value="Unknown/Other">Unknown/Other</option>
+                                                </select>
+                                                <div *ngIf="registertUserForm.controls.Gender.errors!=null && registertUserForm.controls.Gender.errors && (registertUserForm.controls.Gender.touched || registertUserForm.controls.Gender.dirty)">
+                                                        <div class="invalid-feedback d-block" *ngIf="registertUserForm.controls.Gender.errors?.required ">
+                                                                Please select gender.                            
+                                                            </div>
+                                                 </div>
+                                            </div>
+                                    </div>
+                                    <!-- <div class="col-md-6">
+                                        <div class="form-group mb-0">
+                                            <label class="input-label">CNIC/Passport (Optional)</label>
+                                            <input type="text" class="form-control" mask="00000-0000000-0"
+                                                [showMaskTyped]="true" placeholder="CNIC"
+                                                [(ngModel)]="patientProfile.PatientCNIC" formControlName="CNIC"
+                                                (keypress)="inputValidations.restrictFirstSpace($event);">
+                                        </div>
+                                    </div> -->
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-0">
+                                            <label class="input-label">CNIC/Passport (Optional)</label>
+                                            <input  class="form-control" placeholder="CNIC/Passport" type="text" formControlName="CNIC"
+                                                [(ngModel)]="patientProfile.PatientCNIC" [maxLength]="CnicMaxLength"
+                                                (keypress)="dashErrorCnicPassport($event);inputValidations.restrictFirstSpace($event);( inputValidations.alphaWithNumbersRestrictSpace($event))"
+                                                (input)="forceInputUppercase($event);validateCnicPassport(patientProfile.PatientCNIC)"
+                                                (paste)="pasteCnicPassportNumber($event)"
+                                                (focus)="removeCnicMasking($event)"
+                                                (paste)="inputValidations.OnlyNumberAllowedPasteValidation($event)"
+                                                (blur)="maskingCnicPassport(patientProfile.PatientCNIC)">
+
+                                        <div *ngIf="registertUserForm.controls.CNIC.errors  &&  (registertUserForm.controls.CNIC.touched || registertUserForm.controls.CNIC.dirty)"
+                                                class="invalid-feedback d-block">
+                                                <div *ngIf="registertUserForm.controls.CNIC.errors?.required">
+                                                    Please enter CNIC/Passport number.
+                                                </div>
+                
+                                                <!-- <div *ngIf="(patientProfileForm.controls.CNIC.errors?.pattern)"
+                                                    class="invalid-feedback d-block">
+                                                    Please enter a valid CNIC.
+                                                </div> -->
+                                            </div>
+                                            <div class="invalid-feedback d-block">
+                                                <div *ngIf="!isValidCNICPassport">
+                                                    Please enter a valid CNIC/Passport.
+                                                </div>
+                                            </div>    
+                                                
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-0">
+                                            <label class="input-label">Email (Optional)</label>
+                                            <input type="text" class="form-control" placeholder="example@example.com"
+                                                [(ngModel)]="patientProfile.PatientEmail" formControlName="Email"
+                                                [maxLength]="50"
+                                                (keypress)="inputValidations.restrictFirstSpace($event);inputValidations.emailValidate($event)">
+                                            <div *ngIf="registertUserForm.controls.Email.errors  &&  (registertUserForm.controls.Email.touched || registertUserForm.controls.Email.dirty)"
+                                                class="invalid-feedback d-block">
+
+                                                <div
+                                                    *ngIf="registertUserForm.controls.Email.errors?.pattern || registertUserForm.controls.Email.errors?.email">
+                                                    Please enter a valid email address.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+
+                          
+
+
+
+
+
+
+                        </div>
+                    </div>
+                        </div>
+                     </div>
+
+                        
+                <div class="modal-footer">
+                    <button class="btn btn-primary float-right" (click)="SavePatient()">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div bsModal #ForgotPasswordModal="bs-modal" class="modal fade modal-account" id="Modal-Forgot-Password" tabindex="-1"
+        role="dialog" aria-labelledby="" data-backdrop="static">
+        <div class="modal-dialog  modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <img alt="talkMD Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="150">
+                    <button type="button" class="close" (click)="CloseForgotPasswordModal();hideForgotPasswordModal()"
+                        aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body px-5">
+                    <div class="row" *ngIf="isShowForgetPasswordScreen">
+                        <div class="col-md-12 ">
+                            <p>
+                                Please enter your mobile number to receive your password reset instructions.
+                            </p>
+                            <div [formGroup]="ForgotPasswordUserForm">
+                                <div class="input-group  text-center">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="basic-addon1">+92</span>
+                                    </div>
+                                    <input type="text" class="form-control" placeholder="Mobile number"
+                                        [(ngModel)]="forgotPasswordotpVerification.CellPhone" [maxLength]="10"
+                                        (paste)="inputValidations.OnlyNumberAllowedPasteValidation($event)"
+                                        (keypress)="inputValidations.NumberValidation($event)"
+                                        formControlName="CellNumber"
+                                        (keyup.enter)="isLogin=false;forgotPasswordotpVerification.isTrue=false;SendForgotPasswordOTP()">
+                                </div>
+
+
+
+                                <div class="w-100"
+                                    *ngIf="ForgotPasswordUserForm.controls.CellNumber.errors!=null && ForgotPasswordUserForm.controls.CellNumber.errors && (ForgotPasswordUserForm.controls.CellNumber.touched || ForgotPasswordUserForm.controls.CellNumber.dirty)">
+                                    <div class="invalid-feedback d-block"
+                                        *ngIf="ForgotPasswordUserForm.controls.CellNumber.errors?.required ">
+                                        Enter cell number.
+                                    </div>
+                                    <div class="invalid-feedback d-block"
+                                        *ngIf="((ForgotPasswordUserForm.controls.CellNumber.touched || ForgotPasswordUserForm.controls.CellNumber.dirty) && ForgotPasswordUserForm.controls.CellNumber.errors?.pattern)">
+                                        Enter valid cell number e.g. 3XXXXXXXXX
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                            <button class="btn btn-primary mt-4 btn-block"
+                                (click)="isLogin=false;forgotPasswordotpVerification.isTrue=false;SendForgotPasswordOTP()">Continue</button>
+                        </div>
+                    </div>
+                    <div class="row" *ngIf="isShowOTPScreen">
+                        <div class="col-md-12" [formGroup]="OTPForm">
+                            <p>Please enter the code we have sent you on your mobile number:
+                                <span
+                                *ngIf="forgotPasswordotpVerification.CellPhone!=null && forgotPasswordotpVerification.CellPhone!=''"
+                               >
+                           
+                                 +92 {{forgotPasswordotpVerification.CellPhone?maskingCellNumber(forgotPasswordotpVerification.CellPhone): forgotPasswordotpVerification.CellPhone}}
+                            </span>
+
+                            </p>
+                            
+
+                            <ng-otp-input #ngOtpInput (onInputChange)="onOtpChange($event)" *ngIf="showOtpComponent"
+                                [config]="config1" (keyup.enter)="VerifyForgotPasswordOTP($event)"></ng-otp-input>
+
+                                      
+
+                                        <div class="invalid-feedback d-block" *ngIf="!OtpValidation">
+                                            Enter 6 digits OTP.        
+                                        </div>
+                                        
+                                        
+                                                <button class="btn btn-primary my-4 btn-block" (click)="VerifyForgotPasswordOTP()">Continue</button>
+                                               <div class="">Didn't get the code? <a href="javascript:void(0)" class="text-primary" (click)="ResendOTP()">Resend code</a></div>
+                                    </div>
+                                  
+    
+                                </div>
+                                <div class="row" *ngIf="isShowExistingPatientScreen">
+                                        <div class="col-md-12">
+                                            <p>
+                                                Please select your dependent and continue to change password.
+                                            </p>
+                                            <div class="select-patient padding-5">
+                                                <div class="has-feedback  text-center">
+                                                  
+                                                    <select class="form-control" [(ngModel)]="forgotPasswordUserLoginInfo.MRN" (change)="changePatient($event,2)">
+                                                            <option value="0">Select patient</option>
+                                                            <ng-container *ngIf="!forgotPasswordotpVerification.isTrue">
+                                                               <ng-container *ngFor="let patient of PatientsList; let i = index">
+                                                                    <option *ngIf="patient.FirstName!=null && patient.FirstName!='' &&patient.LastName!=null && patient.LastName!='' "
+                                                                        value="{{patient.PatientMRN}}">{{patient.FirstName}} {{patient.LastName}} | MRN: {{patient.PatientMRN}} </option>
+                                                                </ng-container>
+                                                            </ng-container>
+                                                            <ng-container *ngIf="forgotPasswordotpVerification.isTrue">
+                                                                    <ng-container *ngFor="let patient of PatientsList; let i = index">
+                                                                         <option 
+                                                                             value="{{patient.PatientMRN}}">{{patient.FirstName}} {{patient.LastName}} | MRN: {{patient.PatientMRN}} </option>
+                                                                     </ng-container>
+                                                                 </ng-container>
+                                                    </select>
+                                                    <span class="form-control-feedback"><i class="app-icon-IconSet-1-92 text-orange"></i></span>
+                                                </div>
+                                               
+                                            </div>
+                                            <button class="btn btn-primary mt-4 btn-block">Continue</button>
+                                        </div>
+                                      
+                                        
+                                       
+                                       
+                                    </div>
+                                    <div class="row" *ngIf="isShowChangePasswordScreen">
+                                            <div class="col-md-12" [formGroup]="ChangePasswordForm">
+                                                <p>
+                                                    Please enter your new password.
+                                                </p>
+                                                <div class="form-group position-relative">
+                                                    <label class="input-label">Password<span class="text-dange">*</span></label>
+                                                    <input type="password" class="form-control" placeholder="Password" autocomplete="off"
+                                                        [(ngModel)]="forgotPasswordUserLoginInfo.password" formControlName="Password"
+                                                        [maxLength]="30" (keyup.enter)="changePassword()" (focus)="passwordRegixShow()" (keypress)="inputValidations.restrictFirstSpace($event)" 
+                                                        (input)="passwordRegixValidation(forgotPasswordUserLoginInfo.password)" (blur)="passwordRegixHide();confirmPassword()">
+                                                        <div id="message" >
+                                                            <!-- <h3>Password must contain the following:</h3> -->
+                                                            <p id="letter" class="invalid">A <b>lowercase</b> letter
+                                                            </p>
+                                                            <p id="capital" class="invalid">A <b>capital
+                                                                    (uppercase)</b> letter</p>
+                                                            <p id="number" class="invalid">A <b>number</b></p>
+                                                            <p id="specialcharacter" class="invalid">A
+                                                                <b>special character</b></p>
+                                                            <p id="length" class="invalid">Minimum <b>8
+                                                                    characters</b></p>
+                                                        </div>
+                                                    <div
+                                                        *ngIf="ChangePasswordForm.controls.Password.errors!=null && ChangePasswordForm.controls.Password.errors && (ChangePasswordForm.controls.Password.touched || ChangePasswordForm.controls.Password.dirty)">
+                                                        <div class="invalid-feedback d-block" *ngIf="ChangePasswordForm.controls.Password.errors?.required">
+                                                            Enter password.
+                                                        </div>
+                                                          <div class="invalid-feedback d-block" *ngIf="ChangePasswordForm.controls.Password.errors?.pattern">
+                                                            Please enter valid password.</div>
+                                                            </div>    
+                        
+                                                    </div>
+                    
+                                              
+                    
+                                                <div class="form-group">
+                                                    <label class="input-label">Confirm password<span class="text-dange">*</span></label>
+                                                    <input type="password" class="form-control" placeholder="Confirm password"
+                                                        [(ngModel)]="forgotPasswordUserLoginInfo.ConfirmPassword"
+                                                        formControlName="ConfirmPassword" [maxLength]="30" (keyup.enter)="changePassword()"  (focus)="validConformPassword()" (blur)="confirmPassword()" >
+                                                    <div
+                                                        *ngIf="ChangePasswordForm.controls.ConfirmPassword.errors!=null && ChangePasswordForm.controls.ConfirmPassword.errors && (ChangePasswordForm.controls.ConfirmPassword.touched || ChangePasswordForm.controls.ConfirmPassword.dirty)">
+                                                        <div class="invalid-feedback d-block"
+                                                            *ngIf="ChangePasswordForm.controls.ConfirmPassword.errors?.required">
+                                                            Enter confirm password.
+                                                        </div>
+                                        
+                                          </div>
+                                          <div class="invalid-feedback d-block" *ngIf="(forgotPasswordUserLoginInfo.ConfirmPassword!='' && !isValidConfirmPassword)">
+                                                            Password does not match.      
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-primary mt-4 btn-block" (click)="changePassword()">Continue</button>
+                                            </div>
+                                        </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--Signup Modal sch-->
+<div class="modal fade" id="Modal-Signup-sched" tabindex="-1" role="dialog" aria-labelledby="" data-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header"> 
+                    <img alt="talkMD Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="150">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                   
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                        
+                            <fieldset>
+                                <legend>Patient Profile</legend>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Patient name <span
+                                                    class="text-dange">*</span></label>
+                                            <input type="text" class="form-control" placeholder="John">
+                                        </div>
+                                    </div>
+                               
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Age<span class="text-dange">*</span></label>
+                                            <input type="text" class="form-control" placeholder="29">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Reason of appointment <span
+                                                    class="text-dange">*</span></label>
+                                            <input type="text" class="form-control"
+                                                placeholder="Reason of visit i.e. fever, second opinion">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Preferred language <span
+                                                    class="text-dange">*</span></label>
+                                            <select class="form-control">
+                                                <option>Urdu</option>
+                                                <option>English</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Add Medical Document(s)</label>
+                                            <button type="button">Browse</button>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Document Type</label>
+                                            <select class="form-control">
+                                                <option>Select Document Type</option>
+                                                <option>Select Document Type</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>Payment Details</legend>
+                                <div class="row">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Credit/Debit Card Number <span
+                                                    class="text-dange">*</span></label>
+                                            <input type="text" class="form-control rounded-left"
+                                                placeholder="Enter Credit/Debit card number">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Name of Card</label>
+                                            <input type="text" class="form-control" placeholder="Card Type">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">Expiry Date <span
+                                                    class="text-dange">*</span></label>
+                                            <input type="date" class="form-control" placeholder="">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <label class="input-label">CVV <span class="text-dange">*</span> <i
+                                                    data-target="#Modal-CCV" data-toggle="modal"
+                                                    class="fa fa-address-book" aria-hidden="true"></i></label>
+                                            <input type="text" class="form-control" placeholder="Enter CVV">
+                                        </div>
+                                    </div>
+
+
+
+                                </div>
+                            </fieldset>
+
+
+
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+    <!--Phone Verification Modal-->
+    <div bsModal #CellNumberModal="bs-modal" class="modal fade modal-account" id="Modal-Phone-Verification" tabindex="-1"
+        role="dialog" aria-labelledby="" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <img alt="talkMD Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="150">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                        (click)="CloseOTPModal();hideCellNumberModal()">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div class="modal-body px-5">
+                    <p>
+                        Please provide your mobile number to sign up.
+                    </p>
+                    <div class="form-group" [formGroup]="PhoneNumberForm">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text" id="basic-addon1">+92</span>
+                            </div>
+                            <input type="text" class="form-control" placeholder="Mobile number"
+                                [(ngModel)]="otpVerification.CellPhone" formControlName="CellNumber" [maxLength]="10"
+                                (keyup.enter)="isLogin=false;otpVerification.isTrue=false;SendOTP(otpVerification)"
+                                (paste)="inputValidations.OnlyNumberAllowedPasteValidation($event)"
+                                (keypress)="inputValidations.NumberValidation($event)">
+                        </div>
+
+
+
+                        <div class="w-100"
+                            *ngIf="PhoneNumberForm.controls.CellNumber.errors!=null && PhoneNumberForm.controls.CellNumber.errors && (PhoneNumberForm.controls.CellNumber.touched || PhoneNumberForm.controls.CellNumber.dirty)">
+                            <div class="invalid-feedback d-block"
+                                *ngIf="PhoneNumberForm.controls.CellNumber.errors?.required ">
+                                Enter mobile number.
+                            </div>
+                            <div class="invalid-feedback d-block"
+                                *ngIf="((PhoneNumberForm.controls.CellNumber.touched || PhoneNumberForm.controls.CellNumber.dirty) && PhoneNumberForm.controls.CellNumber.errors?.pattern)">
+                                Enter valid cell number e.g. 3XXXXXXXXX
+                            </div>
+                        </div>
+
+
+
+
+
+
+                    </div>
+
+                    <button class="btn btn-primary mt-3 btn-block"
+                        (click)="isLogin=false;otpVerification.isTrue=false;SendOTP(otpVerification)">Continue</button>
+
+                    <p class="mt-4 mb-0">
+                        By continuing, you agree to our <a href="#">Terms &amp; Conditions</a> and <a href="#">Privacy
+                            Policy</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div bsModal #OTPModal="bs-modal" class="modal fade modal-account" id="Modal-Code-Verification" tabindex="-1"
+        role="dialog" aria-labelledby="" data-backdrop="static">
+        <div class="modal-dialog  modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                        <img alt="talkMD Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="150">
+                    <button type="button" class="close" data-dismiss="modal"
+                        (click)="CloseOTPModal();hideOTPModal()">&times;</button>
+
+                </div>
+                <div class="modal-body px-5">
+                    <div class="row">
+                        <div class="col-md-12" [formGroup]="OTPForm">
+                            <p>Please enter the code we have sent you on your mobile number:
+
+                                <span 
+                                *ngIf="UserLoginInfo.CellNumber!=null && UserLoginInfo.CellNumber!=''">
+                                 +92 {{ UserLoginInfo.CellNumber?maskingCellNumber(UserLoginInfo.CellNumber): UserLoginInfo.CellNumber }}
+                                </span>
+
+                                <span
+                                *ngIf="otpVerification.CellPhone!=null && otpVerification.CellPhone!=''">
+                                 +92 {{otpVerification.CellPhone?maskingCellNumber(otpVerification.CellPhone): otpVerification.CellPhone }}
+                                </span>
+                            </p>
+                            
+
+                           
+                         
+
+                            <ng-otp-input #ngOtpInput (onInputChange)="onOtpChange($event)" *ngIf="showOtpComponent"
+                                [config]="config1" (keyup.enter)="VerifyOTPByCode($event)"></ng-otp-input>
+                           
+                            <div class="invalid-feedback d-block" *ngIf="!OtpValidation">
+                                Enter 6 digits OTP.
+                            </div>
+
+                            <button class="btn btn-primary my-4 btn-block"
+                                (click)="VerifyOTPByCode()">Continue</button>
+                            Didn't get the code? <a href="javascript:void(0)" class="text-primary"
+                                (click)="ResendOTP()">Resend code</a>
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div bsModal #AlreadyRegisteredModal="bs-modal" class="modal fade modal-account" id="Modal-Already-Registered" tabindex="-1"
+        role="dialog" aria-labelledby="" data-backdrop="static">
+        <div class="modal-dialog  modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                        <img alt="talkMD Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="150">
+                    <button type="button" class="close" data-dismiss="modal"
+                        (click)="hideAlreadyRegisteredModal()">&times;</button>
+                </div>
+                <div class="modal-body px-5">
+                    <p>Select a patient to continue or add a new patient.</p>
+                    <div class="select-patient input-group mb-4">
+                        <select class="form-control" [(ngModel)]="patientProfile.PatientMRN"
+                            (change)="changePatient($event,1)">
+                            <option value="0">Select patient</option>
+                            <ng-container *ngIf="!otpVerification.isTrue">
+                                <ng-container *ngFor="let patient of PatientsList; let i = index">
+                                    <option
+                                        *ngIf="patient.FirstName!=null && patient.FirstName!='' && patient.LastName!=null && patient.LastName!='' "
+                                        value="{{patient.PatientMRN}}">{{patient.FirstName}} {{patient.LastName }} |
+                                        MRN: {{patient.PatientMRN}} </option>
+                                </ng-container>
+                            </ng-container>
+                            <ng-container *ngIf="otpVerification.isTrue">
+                                <ng-container *ngFor="let patient of PatientsList; let i = index">
+                                    <option value="{{patient.PatientMRN}}">{{patient.FirstName}} {{patient.LastName }} |
+                                        MRN: {{patient.PatientMRN}} </option>
+                                </ng-container>
+                            </ng-container>
+                        </select>
+
+                        <div class="input-group-btn">
+                            <button class="btn btn-primary rounded-0 rounded-right" type="button"
+                                (click)="showSignUpModal()">Add Patient</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div bsModal #FirstUserModal="bs-modal" class="modal fade" id="Modal-First-Patient" tabindex="-1" role="dialog"
+        aria-labelledby="" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                        <img alt="talkMD Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="150">
+                    <button type="button" data-dismiss="modal" aria-label="Close" class="close"><span
+                            aria-hidden="true">×</span></button>
+
+                </div>
+                <div class="modal-body pt-1">
+                    <div class="row">
+                        <div class="col-md-12" [formGroup]="firstUserForm">
+                            <p class="text-muted">
+                            </p>
+
+                            <div class="form-group">
+                                <label class="input-label">First Name<span class="text-dange">*</span></label>
+                                <input type="text" class="form-control" placeholder="Enter your First Name"
+                                    (paste)="inputValidations.NamePasteValidation($event)"
+                                    [(ngModel)]="patientProfile.FirstName" formControlName="First_Name"
+                                    (keypress)="inputValidations.restrictFirstSpace($event);inputValidations.NameValidation($event)"
+                                    [maxLength]="35" (input)="inputValidations.inputToTitleCase($event)">
+                                <div *ngIf="registertUserForm.controls.First_Name.errors  &&  (registertUserForm.controls.First_Name.touched || registertUserForm.controls.First_Name.dirty)"
+                                    class="invalid-feedback d-block">
+                                    <div *ngIf="registertUserForm.controls.First_Name.errors?.required">
+                                        Please enter first name.
+                                    </div>
+                                    <div *ngIf="(registertUserForm.controls.First_Name.errors?.pattern)"
+                                        class="invalid-feedback d-block">
+                                        Please enter valid first name.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="input-label">Last Name<span class="text-dange">*</span></label>
+                                <input type="text" class="form-control" placeholder="Enter your Last Name"
+                                    [(ngModel)]="patientProfile.LastName"
+                                    (paste)="inputValidations.NamePasteValidation($event)" formControlName="Last_Name"
+                                    (keypress)="inputValidations.restrictFirstSpace($event);inputValidations.NameValidation($event)"
+                                    [maxLength]="35" (input)="inputValidations.inputToTitleCase($event)">
+
+                                <div *ngIf="registertUserForm.controls.Last_Name.errors  &&  (registertUserForm.controls.Last_Name.touched || registertUserForm.controls.Last_Name.dirty)"
+                                    class="invalid-feedback d-block">
+                                    <div *ngIf="registertUserForm.controls.Last_Name.errors?.required">
+                                        Please enter last name.
+                                    </div>
+                                    <div *ngIf="(registertUserForm.controls.Last_Name.errors?.pattern)"
+                                        class="invalid-feedback d-block">
+                                        Please enter valid last name.
+                                    </div>
+                                </div>
+                            </div>
+
+                                            <div class="form-group mb-0" >
+                                                    <label  class="input-label">Age<span class="text-dange"> *</span></label>
+                                                    <input type="text" class="form-control" placeholder="Enter Your Age" [(ngModel)]="patientProfile.PatientAge" formControlName="Age" appNumberonly>
+                                                    <div *ngIf="firstUserForm.controls.Age.errors!=null && firstUserForm.controls.Age.errors && (firstUserForm.controls.Age.touched || firstUserForm.controls.Age.dirty)">
+                                                            <div class="invalid-feedback d-block" *ngIf="firstUserForm.controls.Age.errors?.required ">
+                                                                    Enter cell number.                             
+                                                                </div>
+                                                                <!-- <div class="text-red" *ngIf="((firstUserForm.controls.Age.touched || firstUserForm.controls.Age.dirty) && firstUserForm.controls.Age.errors?.pattern)">
+                                                                    Enter valid cell number e.g. (+92XXXXXXXXXXX, 0092XXXXXXXXXXX,0XXXXXXXXXXX)                             
+                                                                </div> -->
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" (click)="SaveFirstPatient()">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+<!-- Take Picture Modal -->
+<div bsModal #TakePictureModal="bs-modal" class="modal" id="TakePicture" tabindex="-4" role="dialog" aria-labelledby=""
+    data-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="CameraPicture">
+        <div class="modal-content">
+            <div class="modal-header">
+                <img alt="talkMD Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="150">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"
+                    (click)="cancelUploadModel()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="video_Fail" style="display: none" class="alert alert-danger" role="alert">
+                            Camera is not connected, please check/connect your camera. Close camera dialog window and
+                            try again
+                        </div>
+                        <div id="video_permission_denied" style="display: none" class="alert alert-danger" role="alert">
+                            Camera permission denied, please allow camera permission. Close camera dialog window and try
+                            again
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="p-1">
+                            <video id="camera" #video height="210" width="290" autoplay>Loading Please wait
+                                ......</video>
+                        </div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-center justify-content-center my-2">
+                        <!-- <button id="capture" class="btn btn-primary">Capture</button> -->
+                        <button id="capture" class="btn btn-primary" [disabled]="!captureBtn"
+                            (click)="Capture()">Capture</button>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="p-1">
+                            <canvas [hidden]="!isImageCaptured" id="canvas" #canvas class="vid"></canvas>
+                            <div class="take_pic text-muted" [hidden]="isImageCaptured">
+                                <i class="fas fa-images fa-4x mb-3 text-primary"></i>
+                                <span class="fs-20">No Image <br> Available</span>
+                                <img>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-primary" data-dismiss="modal"
+                    (click)="cancelUploadModel()">Close</button>
+                <button class="btn btn-primary" id="takePic" *ngIf="imageURL"
+                    (click)="UploadPicture2()">Upload</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Remove/Delete Profile Picture Modal-->
+<div bsModal #TakePictureRemoveModel="bs-modal" class="modal  modal-theme" id="modal-remove" tabindex="-1" role="dialog"
+    aria-labelledby="" data-backdrop="static">
+    <div class="modal-dialog modal-small modal-dialog-centered" role="remove">
+        <div class="modal-content">
+            <div class="modal-body p-5 text-center">
+                    <i class="fas fa-exclamation-triangle text-danger fa-3x mb-3" aria-hidden="true"></i>
+                    <p class="lead mb-0">Are you sure you want to delete it?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline-primary" data-dismiss="modal"
+                    (click)="cancelDeleteProfileModel()">Close</button>
+                <button class="btn btn-danger" (click)="removeProfilePicture()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<ngx-spinner name="LoginSpinner" bdColor="rgba(255,250,250,0.8)" size="large" color="#8196b3" type="ball-spin" [fullScreen]="true">
+</ngx-spinner>

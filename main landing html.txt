@@ -1,0 +1,440 @@
+<!-- <div class="before-login">
+<header class="top-header bg-white">
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-white py-4 px-0">
+            <a class="navbar-brand" href="#"><img alt="Logo" class="img-fluid" src="assets/images/CareClinic_logo.svg" width="180"></a> <button aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-target="#navbarSupportedContent" data-toggle="collapse" type="button"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                 <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link"  href="#section1">Home <span class="sr-only">(current)</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#section2">Specialties</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#section3">Symptoms</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#section4">Doctors</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#section5">How it works</a>
+                    </li>
+                    <li class="nav-item mr-3">
+                        <a class="nav-link" href="login.html">Sign Up</a>
+                    </li>
+                </ul>
+                <form class="form-inline my-2 my-lg-0">
+                    <a class="btn btn-primary btn-lg my-2 my-sm-0" href="javascript:void(0)" (click)="loginButton()">Login</a>
+                </form>
+            </div>
+        </nav>
+    </div>
+</header> -->
+
+
+<section class="container pt-0" id="section1">
+    <div class="patient-banner" data-aos="fade-up">
+        <div class="row ">
+            <div class="col-lg-6 col-xl-5">
+                <h1 class="display-3 font-weight-bold">Let's find a doctor that's perfect for you.</h1>
+                <h4 class="font-weight-normal py-4 text-muted">Save your time and distance by easily online talking to your doctor in the video consultation.</h4>
+            </div>
+        </div>
+        <app-doctor-search></app-doctor-search>
+        <!-- <div class="row position-relative">
+            <div class="col-xl-7 col-lg-8">
+                <div class="">
+                    <ul class="nav nav-pills top-search-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <a aria-controls="symptoms" aria-selected="false" class="nav-link active rounded-top-left" data-toggle="tab" href="#symptoms" id="symptoms-nav-pills" role="tab">Symptoms</a>
+                        </li>
+                        <li class="nav-item">
+                            <a aria-controls="specialty" aria-selected="false" class="nav-link" data-toggle="tab" href="#specialty" id="specialty-tab" role="tab">Specialty</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a aria-controls="doctors" aria-selected="true" class="nav-link rounded-top-right" data-toggle="tab" href="#doctors" id="doctors-nav-pills" role="tab">Doctors</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="myTabContent">
+                        <div aria-labelledby="symptoms-nav-pills" class="tab-pane fade show active" id="symptoms" role="tabpanel">
+                            <div class="search-top position-relative">
+                                <input class="form-control form-control-lg input-top-search  shadow" placeholder="Search doctor by symptoms" type="text"> <button class="btn btn-primary btn-search-top position-absolute px-2 px-sm-3" type="button"><i class="fa fa-search fa-lg"></i></button>
+                            </div>
+                        </div>
+                        <div aria-labelledby="doctors-nav-pills" class="tab-pane fade" id="doctors" role="tabpanel">
+                            <div class="search-top position-relative">
+                                <input class="form-control form-control-lg input-top-search  shadow" placeholder="Search doctor by name" type="text"> <button class="btn btn-primary btn-search-top position-absolute px-2 px-sm-3" type="button"><i class="fa fa-search fa-lg"></i></button>
+                            </div>
+                        </div>
+                        <div aria-labelledby="specialty-nav-pills" class="tab-pane fade" id="specialty" role="tabpanel">
+                            <div class="search-top position-relative">
+                                <input class="form-control form-control-lg input-top-search shadow" placeholder="Search doctor by specialty" type="text"> <button class="btn btn-primary btn-search-top position-absolute px-2 px-sm-3" type="button"><i class="fa fa-search fa-lg"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><img class="dots_pattern position-absolute" src="assets/images/dots-pattern.png">
+        </div> -->
+    </div>
+    <div class="patient-banner-min">
+        <!--<img class="img-fluid" src="assets/images/landing-banner.png">-->
+    </div>
+</section>
+
+<section class="bg-light text-center specialties-section"  id="section2">
+    <div class="container" data-aos="fade-up">
+       
+        <h2 class="mb-4 mb-sm-5 heading-2 font-weight-bold">Find the best doctor by speciality</h2>
+        <div class="">
+            <owl-carousel-o [options]="customOptionsSpe" >
+            
+                  
+                    <ng-template carouselSlide *ngFor="let i of providerSpeciality"> 
+                        <a href="javascript:void(0)" (click)="getSpecialityProviders(i)">
+                            <div class="spe-icon" >
+                                <img class="filled"  [src]="i.filledIcon">
+                                <img class="outline"  [src]="i.Icon">
+                            </div>
+                            <p class="text-muted text-center mb-0">{{i.Name}}</p>
+                        </a>
+                    </ng-template>   
+                   
+                </owl-carousel-o>
+         
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <a href="javascript:void(0)" class="text-primary all-symptoms mt-2" (click)="getAllSpecialities()">View more specialities</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<section class="" id="section3">
+    <div class="container" data-aos="fade-up">
+        <h2 class="title mb-4 mb-sm-5 text-center title heading-2 font-weight-bold">Find doctor by common symptoms</h2>
+        <ul class="list-unstyled d-flex flex-wrap symptoms" >
+            <li *ngFor="let sym of sympthemsList"><a href="javascript:void(0)" (click)="getSymptomsProviders(sym)" >{{sym.SympthemsName}}</a></li>
+        </ul>
+        <div class="row">
+            <div class="col-12">
+                <a href="javascript:void(0)" class="text-primary all-symptoms" (click)="getAllSymptoms()">View more symptoms</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- <section class="bg-light" id="section4">
+    <div class="container" data-aos="fade-up">
+        <h2 class="mb-4 mb-sm-5 heading-2 text-center font-weight-bold">
+            Schedule an appointment with top specialists
+
+        </h2>
+        <div>
+            <div class="owl-doctors">
+            <owl-carousel-o [options]="customOptionsDoctors" >
+                <ng-template carouselSlide> 
+                    <div class="card doc-list mb-3 mb-xl-5">
+                        <div class="card-body">
+                            <img class="rounded mx-auto doc-img" src="assets/images/Dr.Inderijit.jpg"> <img class="rounded-circle mx-auto country-flage" src="assets/images/usa-flage.jpg">
+                             <h4 class="text-center">Dr. Inderjit S. Kainth</h4>
+                            <h6 class="text-primary text-center mb-2 doc-list-c-d">Internal Medicine</h6>
+                            <div class="feedback text-center mb-3" data-original-title="4.5 Feedback Rating" data-placement="top" data-toggle="tooltip" title="">
+                                <i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star"></i><span aria-hidden="true" class="pl-1">4.0</span>
+                            </div>
+                            <div class="d-flex mt-3 flex-column">
+                                <a class="btn btn-primary-outline btn-lg mb-2" href="Doctor-Profile.html" tabindex="0"><i class="far fa-user mr-2"></i>View Profile</a><a class="btn btn-primary btn-lg" href="Doctor-Profile.html" tabindex="0"><i class="fa fa-video mr-2"></i>Schedule an Appointment</a>
+                            </div>
+                        </div>
+                    </div>
+                    </ng-template> 
+                    <ng-template carouselSlide> 
+                        <div class="card doc-list mb-3 mb-xl-5">
+                            <div class="card-body">
+                                <img class="rounded mx-auto doc-img" src="assets/images/dr.Bradley.jpg"> <img class="rounded-circle mx-auto country-flage" src="assets/images/usa-flage.jpg">
+                                 <h4 class="text-center">Dr. Brick Wall</h4>
+                                <h6 class="text-primary text-center mb-2 doc-list-c-d">Internal Medicine</h6>
+                                <div class="feedback text-center mb-3" data-original-title="4.5 Feedback Rating" data-placement="top" data-toggle="tooltip" title="">
+                                    <i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star"></i><span aria-hidden="true" class="pl-1">4.0</span>
+                                </div>
+                                <div class="d-flex mt-3 flex-column">
+                                    <a class="btn btn-primary-outline btn-lg mb-2" href="Doctor-Profile.html" tabindex="0"><i class="far fa-user mr-2"></i>View Profile</a><a class="btn btn-primary btn-lg" href="Doctor-Profile.html" tabindex="0"><i class="fa fa-video mr-2"></i>Schedule an Appointment</a>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                    <ng-template carouselSlide> 
+                        <div class="card doc-list mb-3 mb-xl-5">
+                            <div class="card-body">
+                                <img class="rounded mx-auto doc-img" src="assets/images/dr.Morgan.jpg"> <img class="rounded-circle mx-auto country-flage" src="assets/images/usa-flage.jpg">
+                                 <h4 class="text-center">Dr. John Doe</h4>
+                                <h6 class="text-primary text-center mb-2 doc-list-c-d">Internal Medicine</h6>
+                                <div class="feedback text-center mb-3" data-original-title="4.5 Feedback Rating" data-placement="top" data-toggle="tooltip" title="">
+                                    <i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star"></i><span aria-hidden="true" class="pl-1">4.0</span>
+                                </div>
+                                <div class="d-flex mt-3 flex-column">
+                                    <a class="btn btn-primary-outline btn-lg mb-2" href="Doctor-Profile.html" tabindex="0"><i class="far fa-user mr-2"></i>View Profile</a><a class="btn btn-primary btn-lg" href="Doctor-Profile.html" tabindex="0"><i class="fa fa-video mr-2"></i>Schedule an Appointment</a>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                    <ng-template carouselSlide> 
+                        <div class="card doc-list mb-3 mb-xl-5">
+                            <div class="card-body">
+                                <img class="rounded mx-auto doc-img" src="assets/images/patient-image.jpg"> <img class="rounded-circle mx-auto country-flage" src="assets/images/usa-flage.jpg">
+                                 <h4 class="text-center">Dr. Joe Biden</h4>
+                                <h6 class="text-primary text-center mb-2 doc-list-c-d">Internal Medicine</h6>
+                                <div class="feedback text-center mb-3" data-original-title="4.5 Feedback Rating" data-placement="top" data-toggle="tooltip" title="">
+                                    <i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star"></i><span aria-hidden="true" class="pl-1">4.0</span>
+                                </div>
+                                <div class="d-flex mt-3 flex-column">
+                                    <a class="btn btn-primary-outline btn-lg mb-2" href="Doctor-Profile.html" tabindex="0"><i class="far fa-user mr-2"></i>View Profile</a><a class="btn btn-primary btn-lg" href="Doctor-Profile.html" tabindex="0"><i class="fa fa-video mr-2"></i>Schedule an Appointment</a>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                    <ng-template carouselSlide> 
+                        <div class="card doc-list mb-3 mb-xl-5">
+                            <div class="card-body">
+                                <img class="rounded mx-auto doc-img" src="assets/images/Dr.Inderijit.jpg"> <img class="rounded-circle mx-auto country-flage" src="assets/images/usa-flage.jpg">
+                                 <h4 class="text-center">Dr. Inderjit S. Kainth</h4>
+                                <h6 class="text-primary text-center mb-2 doc-list-c-d">Internal Medicine</h6>
+                                <div class="feedback text-center mb-3" data-original-title="4.5 Feedback Rating" data-placement="top" data-toggle="tooltip" title="">
+                                    <i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star"></i><span aria-hidden="true" class="pl-1">4.0</span>
+                                </div>
+                                <div class="d-flex mt-3 flex-column">
+                                    <a class="btn btn-primary-outline btn-lg mb-2" href="Doctor-Profile.html" tabindex="0"><i class="far fa-user mr-2"></i>View Profile</a><a class="btn btn-primary btn-lg" href="Doctor-Profile.html" tabindex="0"><i class="fa fa-video mr-2"></i>Schedule an Appointment</a>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                    <ng-template carouselSlide> 
+                        <div class="card doc-list mb-3 mb-xl-5">
+                            <div class="card-body">
+                                <img class="rounded mx-auto doc-img" src="assets/images/Dr.Inderijit.jpg"> <img class="rounded-circle mx-auto country-flage" src="assets/images/usa-flage.jpg">
+                                 <h4 class="text-center">Dr. Inderjit S. Kainth</h4>
+                                <h6 class="text-primary text-center mb-2 doc-list-c-d">Internal Medicine</h6>
+                                <div class="feedback text-center mb-3" data-original-title="4.5 Feedback Rating" data-placement="top" data-toggle="tooltip" title="">
+                                    <i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star"></i><span aria-hidden="true" class="pl-1">4.0</span>
+                                </div>
+                                <div class="d-flex mt-3 flex-column">
+                                    <a class="btn btn-primary-outline btn-lg mb-2" href="Doctor-Profile.html" tabindex="0"><i class="far fa-user mr-2"></i>View Profile</a><a class="btn btn-primary btn-lg" href="Doctor-Profile.html" tabindex="0"><i class="fa fa-video mr-2"></i>Schedule an Appointment</a>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                    <ng-template carouselSlide> 
+                        <div class="card doc-list mb-3 mb-xl-5">
+                            <div class="card-body">
+                                <img class="rounded mx-auto doc-img" src="assets/images/Dr.Inderijit.jpg"> <img class="rounded-circle mx-auto country-flage" src="assets/images/usa-flage.jpg">
+                                 <h4 class="text-center">Dr. Inderjit S. Kainth</h4>
+                                <h6 class="text-primary text-center mb-2 doc-list-c-d">Internal Medicine</h6>
+                                <div class="feedback text-center mb-3" data-original-title="4.5 Feedback Rating" data-placement="top" data-toggle="tooltip" title="">
+                                    <i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star checked"></i><i aria-hidden="true" class="fa fa-star"></i><span aria-hidden="true" class="pl-1">4.0</span>
+                                </div>
+                                <div class="d-flex mt-3 flex-column">
+                                    <a class="btn btn-primary-outline btn-lg mb-2" href="Doctor-Profile.html" tabindex="0"><i class="far fa-user mr-2"></i>View Profile</a><a class="btn btn-primary btn-lg" href="Doctor-Profile.html" tabindex="0"><i class="fa fa-video mr-2"></i>Schedule an Appointment</a>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+    
+                   
+                </owl-carousel-o>
+            </div>
+        </div>
+
+    </div>
+</section> -->
+
+
+<section class="bg-light" id="section4">
+
+  <div class="container" data-aos="fade-up">
+    <h2 class="mb-4 mb-sm-5 heading-2 text-center font-weight-bold">
+      Schedule an appointment with top specialists
+    </h2>
+    <div class="owl-doctors">
+
+      <app-ranking-top-specialist></app-ranking-top-specialist>
+
+    </div>
+  </div>
+
+</section>
+
+
+
+<section  id="section5">
+    <div class="container" data-aos="fade-up">
+        <div class="row align-items-center">
+            <div class="col-lg-6 order-lg-2 easy-steps pb-5 pb-lg-0" data-aos="fade-lef">
+                <p class="lead mb-0 text-gray">How it works</p>
+                <h2 class="mb-4 mb-sm-5 heading-2 font-weight-bold">4 Easy steps to  get in</h2>
+                <div class="media mb-4 align-items-center">
+                    <div class="bg-light  p-4 border  rounded mr-4 step-icon"><img height="32" src="assets/images/icons/Patient-Registration.png"></div>
+                    <div class="d-flex flex-column justify-content-center media-body">
+                        <h4 class="mb-1">Register as a patient</h4>
+                        <p class="mb-0">Basic profile, health information, preferred languages</p>
+                    </div>
+                </div>
+                <div class="media mb-4 align-items-center">
+                    <div class="bg-light  p-4 border rounded mr-4 step-icon"><img height="32" src="assets/images/icons/book-appointment.svg"></div>
+                    <div class="d-flex flex-column justify-content-center media-body">
+                        <h4 class="mb-1">Search doctor and make appointment</h4>
+                        <p class="mb-0">Doctor profile & schedule, specialities, symptoms, language options </p>
+                    </div>
+                </div>
+                <div class="media mb-4 align-items-center">
+                    <div class="bg-light  border p-4 rounded mr-4 step-icon"><img height="32" src="assets/images/icons/Payment.png"></div>
+                    <div class="d-flex flex-column justify-content-center media-body">
+                        <h4 class="mb-1">Make payment via credit card</h4>
+                        <p class="mb-0">Payment via secure means and easy refund</p>
+                    </div>
+                </div>
+                <div class="media align-items-center">
+                    <div class="bg-light p-4 border rounded mr-4 step-icon"><img height="32" src="assets/images/icons/consultant-video.svg"></div>
+                    <div class="d-flex flex-column justify-content-center media-body">
+                        <h4 class="mb-1">Consult via video</h4>
+                        <p class="mb-0">More than a video consultation, patient health record, medical history, medicine prescription, radiology & pathology tests, feedback - all secure</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center"><img class="img-fluid" data-aos="fade-right" src="assets/images/easy-steps-image.png"></div>
+        </div>
+    </div>
+</section>
+
+
+<section class="change-section" data-aos="fade-up">
+    <div class="container">
+        <div class="col-9 col-md-12">
+            <p class="lead mb-0 text-light">Its time</p>
+            <h2 class="text-white mb-4 mb-sm-5 heading-2 font-weight-bold">to have virtual healthcare experience</h2>
+            <button class="btn btn-primary btn-lg" tabindex="0">Contact Your Doctor</button>
+        </div>
+        
+    </div>
+</section>
+<section class="app-section" data-aos="fade-up">
+    <div class="container">
+        <div class="d-lg-flex justify-content-center">
+            <div class="col-lg-6 align-self-center mb-5 mb-lg-0">
+                <p class="lead  mb-0 text-gray">App coming soon!</p>
+                <h2 class="mb-4 mb-sm-5 heading-2 font-weight-bold">Health care made easy!</h2>
+                <p class="d-none d-xl-block">Just like a clinic visit, our doctors listen to your history of symptoms and diagnose your condition.</p>
+                <div class="d-sm-flex app-btn my-4"><img alt="Logo" class="img-fluid cursor-pointer mr-3" src="assets/images/App-Store.png"> <img alt="Logo" class="img-fluid cursor-pointer" src="assets/images/Google-Play.png"></div>
+                <h6 class="download-app mt-3">Enter your cell number for app link.</h6>
+                <div class="send-link col-12 col-md-7 col-lg-10 col-xl-7 px-0">
+
+                        <div class="input-group">
+                                <input aria-describedby="basic-addon2" aria-label="Recipient's username" class="form-control form-control-lg" placeholder="+92 (XXX) XXXXXXX" type="text" [(ngModel)]="UserLoginInfo.CellNumber"  (paste)="inputValidations.OnlyNumberAllowedPasteValidation($event)"
+                                [maxLength]="10">
+            
+                                <div class="input-group-append rounded-right">
+                                    <span class="input-group-text btn btn-primary btn-lg cursor-pointer text-white" id="basic-addon2" (click)="LoginByPhoneNo()" >Send Link</span>
+                                </div>    
+
+                            </div>
+                    <!-- <div class="input-group" [formGroup]="PhoneNumberForm">
+                        <input aria-describedby="basic-addon2" aria-label="Recipient's username" class="form-control form-control-lg" placeholder="+92 (XXX) XXXXXXX" type="text" [(ngModel)]="UserLoginInfo.CellNumber" formControlName="CellNumber" (paste)="inputValidations.OnlyNumberAllowedPasteValidation($event)"
+                        [maxLength]="10">
+    
+                        <div class="input-group-append rounded-right">
+                            <span class="input-group-text btn btn-primary btn-lg cursor-pointer text-white" id="basic-addon2" (click)="sendAppLinkViaSMS()" >Send Link</span>
+                        </div>
+                         <div class="w-100"  *ngIf="PhoneNumberForm.controls.CellNumber.errors!=null && PhoneNumberForm.controls.CellNumber.errors && (PhoneNumberForm.controls.CellNumber.touched || PhoneNumberForm.controls.CellNumber.dirty)">
+                                <div class="invalid-feedback d-block" *ngIf="PhoneNumberForm.controls.CellNumber.errors?.required ">
+                                        Enter cell number.                             
+                                    </div>
+                                    <div class="invalid-feedback d-block" *ngIf="PhoneNumberForm.controls.CellNumber.errors?.pattern">
+                                        Enter valid mobile number e.g. 3XXXXXXXXX                            
+                                </div>
+                         </div>
+                    </div> -->
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <img alt="" class="img-fluid great-care-img" src="assets/images/greate-care-img.png">
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+<!-- 
+<footer class="bg-darker">
+    <div class="foo-top">
+        <div class="container py-2">
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex flex-column flex-md-row row foo-toplist">
+                        <div class=" mx-auto mx-lg-0 mb-3 mb-lg-0 col-8 col-lg-2 text-center text-lg-left align-self-center">
+                            <a class="navbar-brand footer-brand" href=""><img alt="Logo" class="img-fluid" src="assets/images/CareClinic_logo_white.svg" width="230"></a>
+                        </div>
+                        <div class="d-flex flex-column bl-1 border-left pl-3 col-12 col-lg-5 border-left-md-0 text-center text-lg-left py-3 py-lg-0">
+                            <h5 class="text-white">Additional Questions?</h5>
+                            <ul class="list-unstyled d-flex mb-0 justify-content-center justify-content-lg-start footer-menu">
+                                <li>
+                                    <a class="pr-3 br-1 text-white" href="mailto:support@talkmd.com">support@careclinic.com</a>
+                                </li>
+                                <li class="border-left">
+                                    <a class="text-white px-3" href="tel:8333825563">051 5680166</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="d-flex flex-column mt-2 mt-md-0 col-12 col-lg-5 ml-lg-auto text-center text-lg-left py-lg-0">
+                            <h5 class="text-white">Support</h5>
+                            <ul class="footer-menu list-unstyled d-flex mb-0 flex-wrap justify-content-center justify-content-lg-start">
+                                <li>
+                                    <a class="pr-3 text-white" href="#">Terms & Conditions</a>
+                                </li>
+                                <li>
+                                    <a class="px-3 border-left text-white" href="javascript:void(0)">Privacy Policy</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="foo-bottom">
+        <div class="container text-white">
+            <div class="row mx-0">
+                <div class="col-lg-12">
+                    <div class="d-flex row mx-1 border-top pt-2">
+                        <span class="col-3 px-0 col-lg-3 d-flex flex-column flex-lg-row mb-3 mb-lg-0 align-self-lg-center"><small class="align-self-lg-center mr-lg-2 foo-copyright">Powered by</small> <img alt="" class="mtbclogo my-1" src="assets/images/mtbc-logo.png" width="45"></span>
+                        <div class="col-12 col-lg-6 px-0 d-flex justify-content-center flex-fill order-3 order-lg-2 my-3 my-lg-0">
+                            <small class="align-self-center foo-copyright">© 2021 CareClinic - Powered by MTBC, Inc.</small>
+                        </div>
+                        <div class="col-lg-3 px-0 col-9 text-right order-lg-3 my-2 my-lg-0 mb-0">
+                            <span class="text-white">Connect with Us</span>
+                            <ul class="social mb-0 list-unstyled d-flex justify-content-end">
+                                <li>
+                                    <a href="https://www.facebook.com/MTBCInc"><i class=" fab fa-facebook-f"></i></a>
+                                </li>
+                                <li>
+                                    <a href="https://twitter.com/MTBC_UniqHIT"><i class="fab fa-twitter"></i></a>
+                                </li>
+                                <li>
+                                    <a href="http://www.linkedin.com/company/mtbc"><i class="fab fa-linkedin-in"></i></a>
+                                </li>
+                                <li>
+                                    <a href="https://www.youtube.com/user/mtbcchannel"><i class="fab fa-youtube"></i></a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer> -->
+
+<!-- <button onclick="topFunction()" id="Btn-Top" title="Go to top"><i class="fas fa-chevron-up"></i></button> -->
+<!-- </div> -->

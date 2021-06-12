@@ -1,0 +1,1665 @@
+import { OTP, userLoginInfo, PatientProfile } from './../../models/login/login';
+import { LoginService } from './../../services/login-service/login.service';
+import { Component, OnInit, Renderer2, TemplateRef, ViewChild, ElementRef } from '@angular/core';
+import { BsModalService, BsModalRef, ModalOptions } from 'ngx-bootstrap/modal';
+import { ModalDirective } from 'ngx-bootstrap/modal';
+import { FormControl, FormGroup, Validators, ReactiveFormsModule, Form } from '@angular/forms';
+import { Router } from '../../../../node_modules/@angular/router';
+import { NgxSpinnerService } from 'ngx-spinner';
+import { InputValidations } from '../../generic/mdutills.service';
+import { ToastrService } from 'ngx-toastr';
+import { TBLPatientPic } from '../../models/patient/patient';
+import { ImageBase } from '../../generic/generic-utility';
+import { keepAppointmentSlot } from '../../models/provider-details/provider-details';
+import { DataInjectableService } from '../../shared/data-injectable.service';
+
+import * as CryptoJS from 'crypto-js';
+
+declare var $;
+var crypt = {
+    secret: "CIPHERKEY"
+  }
+
+@Component({
+    selector: 'app-login',
+    templateUrl: './login.component.html',
+    styleUrls: ['./login.component.scss']
+})
+export class LoginComponent implements OnInit {
+    /* ***View Childs*** */
+    @ViewChild('CellNumberModal') public CellNumberModal: ModalDirective;
+    @ViewChild('OTPModal') public OTPModal: ModalDirective;
+    @ViewChild('AlreadyRegisteredModal') public AlreadyRegisteredModal: ModalDirective;
+    @ViewChild('FirstUserModal') public FirstUserModal: ModalDirective;
+    @ViewChild('SignUpModal') public SignUpModal: ModalDirective;
+    @ViewChild('ForgotPasswordModal') public ForgotPasswordModal: ModalDirective;
+    @ViewChild('TakePictureModal') public TakePictureModal: ModalDirective;
+    @ViewChild('video', { static: true }) videoElement: ElementRef;
+    @ViewChild("video", { static: false }) video: ElementRef;
+    @ViewChild('canvas', { static: true }) canvas: ElementRef;
+    @ViewChild('TakePictureRemoveModel') public TakePictureRemoveModel: ModalDirective;
+    @ViewChild('NpmOTPModal') public NpmOTPModal: ModalDirective;
+    @ViewChild('ngOtpInput', { static: false }) ngOtpInput: any;
+
+    //Video
+    captureBtn: boolean;
+    cameraOn: boolean;
+    isValidConfirmPassword: boolean;
+    streaming = false;
+    error: any;
+    private stream: MediaStream = null;
+    private constraints = {
+        audio: false,
+        video: true,
+    };
+    _keepAppointmentSlot:keepAppointmentSlot;
+    fileData: File = null;
+    previewUrl: any = null;
+    fileUploadProgress: string = null;
+    uploadedFilePath: string = null;
+    avatarsm;
+    classToApply: boolean;
+    videoWidth = 0;
+    videoHeight = 0;
+    imageURL: string;
+    isImageCaptured: boolean;
+    doctorprofileimage = '../../../../assets/images/unknown-avatar.png';
+    /* ***Variables*** */
+    phoneNo: string;
+    isOTPVerified: boolean;
+    isMRN: boolean;
+    isLogin: boolean;
+    isShowForgetPasswordScreen: boolean;
+    isShowExistingPatientScreen: boolean;
+    isShowChangePasswordScreen: boolean;
+    isShowOTPScreen: boolean;
+    /* ***Models*** */
+    modalRef: BsModalRef;
+    otpVerification: OTP;
+    forgotPasswordotpVerification: OTP;
+    LoginByNoOtpVerification: OTP;
+    OTPForm: FormGroup;
+    PhoneNumberForm: FormGroup;
+    firstUserForm: FormGroup;
+    registertUserForm: FormGroup;
+    ForgotPasswordUserForm: FormGroup;
+    LoginByCellNumberForm: FormGroup;
+    LoginByMRNForm: FormGroup;
+    ChangePasswordForm: FormGroup;
+    UserLoginInfo: userLoginInfo;
+    LoginByNoUserLoginInfo: userLoginInfo;
+    forgotPasswordUserLoginInfo: userLoginInfo;
+    patientProfile: PatientProfile;
+    inputValidations: InputValidations;
+    Patientpicture: TBLPatientPic;
+    otp: string;
+    showOtpComponent = true;
+    OtpValidation: boolean = false;
+    CnicMaxLength: number = 13;
+    isValidCNICPassport: boolean = true;
+    /* ***Arrays*** */
+    PatientsList: PatientProfile[];
+    config = {
+        backdrop: true,
+        ignoreBackdropClick: true,
+        keyboard: false,
+    };
+    config1 = {
+        allowNumbersOnly: true,
+        length: 6,
+        isPasswordInput: false,
+        disableAutoFocus: false,
+        placeholder: '',
+        inputStyles: {
+            'width': '50px',
+            'height': '50px'
+        }
+    };
+    onOtpChange(otp) {
+        
+        this.otp = otp;
+        if (this.otp.length > 5) {
+            this.OtpValidation = true;
+        }
+    }
+
+    setVal(val) {
+        this.ngOtpInput.setValue(val);
+        this.config1.disableAutoFocus = true;
+    }
+    onConfigChange() {
+        this.showOtpComponent = false;
+        this.otp = null;
+        setTimeout(() => {
+            this.showOtpComponent = true;
+        }, 0);
+    }
+
+    exr = /^((\+92)|(0092))-{0,1}\d{10}$|^0(\d{10})$/
+    constructor(private DataService: LoginService, private render: Renderer2, private modalService: BsModalService, private _router: Router, 
+        private spinner: NgxSpinnerService, private toastr: ToastrService,private objInjectable: DataInjectableService) {
+        this.Initialization();
+
+        let user_Token = sessionStorage.getItem('AuthToken');
+        if(user_Token){
+            this._router.navigate(['/home']);
+        }
+
+    }
+    Initialization() {
+        this.isValidConfirmPassword = true;
+        this.CreateLoginByCellNumberForm();
+        this.CreateLoginByMRNForm();
+        this.otpVerification = new OTP();
+        this.LoginByNoOtpVerification = new OTP();
+        this.forgotPasswordotpVerification = new OTP();
+        this.isOTPVerified = false;
+        this.PatientsList = [];
+        this.isLogin = false;
+        this.UserLoginInfo = new userLoginInfo();
+        this.LoginByNoUserLoginInfo = new userLoginInfo();
+        this.forgotPasswordUserLoginInfo = new userLoginInfo();
+        this.UserLoginInfo.isMRN = false;
+        this.forgotPasswordUserLoginInfo.isMRN = false;
+        this.LoginByNoUserLoginInfo.isMRN = false;
+        this.patientProfile = new PatientProfile();
+        this.inputValidations = new InputValidations();
+        this.Patientpicture = new TBLPatientPic();
+        this.isMRN = false;
+        this.isShowForgetPasswordScreen = true;
+        this.isShowChangePasswordScreen = false;
+        this.isShowExistingPatientScreen = false;
+        this.isShowOTPScreen = false;
+        this.isImageCaptured = false;
+        this.CreatePhoneNumberForm();
+        this.CreateOTPVerificationForm();
+        this.CreateFirstUserForm();
+        this.CreateRegisterUserForm();
+        this.CreateForgotPasswordUserForm();
+        this.CreateChangePasswordForm();
+        this.OtpValidation = true;
+        this.isValidCNICPassport = true;
+    }
+
+    CreateOTPVerificationForm() {
+        this.OTPForm = new FormGroup({
+            digit1: new FormControl("", [Validators.required]),
+            digit2: new FormControl("", [Validators.required]),
+            digit3: new FormControl("", [Validators.required]),
+            digit4: new FormControl("", [Validators.required]),
+            digit5: new FormControl("", [Validators.required]),
+            digit6: new FormControl("", [Validators.required]),
+        });
+    }
+    CreatePhoneNumberForm() {
+        // let cellNoRegex = /^((\+92)|(0092))-{0,1}\d{10}$|^3(\d{10})|[0-9]{3}[0-9]{3}[0-9]{4}$/;
+        let cellNoRegex = /^3(\d{9})$/;
+        this.PhoneNumberForm = new FormGroup({
+            CellNumber: new FormControl("", [Validators.required, Validators.pattern(cellNoRegex)]),
+        });
+    }
+    CreateForgotPasswordUserForm() {
+        // let cellNoRegex = /^((\+92)|(0092))-{0,1}\d{10}$|^0(\d{10})$/;
+        //let cellNoRegex = /^((\+92)|(0092))-{0,1}\d{10}$|^0(\d{10})|[0-9]{3}[0-9]{3}[0-9]{4}$/;
+        let cellNoRegex = /^3(\d{9})$/;
+        this.ForgotPasswordUserForm = new FormGroup({
+            CellNumber: new FormControl("", [Validators.required, Validators.pattern(cellNoRegex)]),
+        });
+    }
+    CreateLoginByCellNumberForm() {
+        let cellNoRegex = /^3(\d{9})$/;
+        //  let cellNoRegex=/^[0-9]{3}[0-9]{3}[0-9]{4}$/
+        this.LoginByCellNumberForm = new FormGroup({
+            CellNumber: new FormControl("", [Validators.required, Validators.pattern(cellNoRegex)]),
+        });
+    }
+    CreateLoginByMRNForm() {
+        this.LoginByMRNForm = new FormGroup({
+            MRN: new FormControl("", [Validators.required]),
+            Password: new FormControl("", [Validators.required]),
+        });
+    }
+    CreateFirstUserForm() {
+        let nameregex = /^[a-zA-Z ]*$/;
+        this.firstUserForm = new FormGroup({
+            First_Name: new FormControl("", [Validators.required, this.noWhitespaceValidator, Validators.pattern(nameregex)]),
+            Last_Name: new FormControl("", [Validators.required, this.noWhitespaceValidator, Validators.pattern(nameregex)]),
+            Age: new FormControl("", [Validators.required])
+        });
+    }
+    // CreateChangePasswordForm() {
+    //   this.ChangePasswordForm = new FormGroup({
+    //     Password: new FormControl("", [Validators.required]),
+    //     ConfirmPassword: new FormControl("", [Validators.required])
+    //   });
+    // }
+    CreateRegisterUserForm() {
+        let nameregex = /^[a-zA-Z ]*$/;
+        let patternEmail = "([a-zA-Z0-9_.-]{1}[a-zA-Z0-9_.-]*)((@[a-zA-Z-_+^&{}~]{2}[a-zA-Z0-9-_+^&{}~]*)[\\.]([a-zA-Z]{2}|[a-zA-Z]{3}))";
+        this.registertUserForm = new FormGroup({
+            // Name: new FormControl("", [Validators.required]),
+            First_Name: new FormControl("", [Validators.required, this.noWhitespaceValidator, Validators.pattern(nameregex)]),
+            Last_Name: new FormControl("", [Validators.required, this.noWhitespaceValidator, Validators.pattern(nameregex)]),
+            Age: new FormControl("", [Validators.required]),
+            CNIC: new FormControl(""),
+            Gender: new FormControl("", [Validators.required]),
+            Email: new FormControl("", [Validators.pattern(patternEmail)])
+        });
+    }
+
+    public noWhitespaceValidator(control: FormControl) {
+        const isWhitespace = (control.value || '').trim().length === 0;
+        const isValid = !isWhitespace;
+        return isValid ? null : { 'whitespace': true };
+    }
+    validConformPassword() {
+        
+        this.isValidConfirmPassword = true;
+    }
+    confirmPassword() {
+        
+        if (this.forgotPasswordUserLoginInfo.ConfirmPassword != "" && this.forgotPasswordUserLoginInfo.ConfirmPassword != null && this.forgotPasswordUserLoginInfo.ConfirmPassword != undefined) {
+            if (this.forgotPasswordUserLoginInfo.ConfirmPassword != this.forgotPasswordUserLoginInfo.password) {
+                this.isValidConfirmPassword = false;
+            }        
+        }
+    }
+
+    changePassword() {
+        
+        if (!this.ChangePasswordForm.valid) {
+            this.validateAllFormFields(this.ChangePasswordForm);
+            return false;
+        }
+        if (this.forgotPasswordUserLoginInfo != null && this.forgotPasswordUserLoginInfo.password != null && this.forgotPasswordUserLoginInfo.ConfirmPassword != null && this.forgotPasswordUserLoginInfo.password != this.forgotPasswordUserLoginInfo.ConfirmPassword) {
+            this.isValidConfirmPassword = false;
+            return false;
+        }
+        if (this.forgotPasswordotpVerification != null && this.forgotPasswordotpVerification.CellPhone != null) {
+            this.forgotPasswordUserLoginInfo.CellNumber = this.forgotPasswordotpVerification.CellPhone;
+        }
+        else {
+            this.forgotPasswordUserLoginInfo.CellNumber = "";
+        }
+
+        this.spinner.show('LoginSpinner');
+        // return false;
+        this.DataService.ChangeForgotPassword(this.forgotPasswordUserLoginInfo)
+            .subscribe(response => {
+                this.spinner.hide('LoginSpinner');
+                
+                if (response != null) {
+                    if (response.IsVerified && response.code == "2k" && response.digit1 == 200) {
+                        this.CloseForgotPasswordModal();
+                        this.hideForgotPasswordModal();
+                        this.toastr.success("Password Change Successfully", 'Success', { enableHtml: true });
+
+                    }
+                    else if (!response.IsVerified) {
+                        if (response.code == "40k" && response.digit1 == 404) {
+                            this.toastr.error("Please enter valid cell number.", 'Error', { enableHtml: true });
+                        }
+                        else if (response.code == "5k" && response.digit1 == 500) {
+                            this.toastr.error("Something went wrong.", 'Error', { enableHtml: true });
+                            this.setVal("");
+                        }
+                        else if (response.code == "50k" && response.digit1 == 505) {
+                            this.toastr.error("Please enter valid OTP.", 'Error', { enableHtml: true });
+                            this.setVal("");
+                        }
+                    }
+                }
+            },
+            error => {
+                this.spinner.hide('LoginSpinner');
+            })
+    }
+
+    ngOnInit(): void {
+        this.checkCookie();
+        this.inputValidations.closeModal();
+    }
+
+    openModal(template: TemplateRef<any>) {
+        this.modalRef = this.modalService.show(template, { id: 1 });
+    }
+    
+    onKeyUp(e) {
+        
+        var target = e.srcElement || e.target;
+        const initalValue = target.value;
+        target.value = initalValue.replace(/[^0-9]*/g, '');
+        if (initalValue !== target.value) {
+            event.stopPropagation();
+            return false;
+        }
+        if (e.keyCode != 8 && e.target.value == "") {
+            return false;
+        }
+        // console.log(e.target.value)
+        var maxLength = parseInt(target.attributes["maxlength"].value);
+        var myLength = target.value.length;
+        if (e.keyCode == 13 && myLength == 0) {
+            e.target.focus;
+            return false;
+        }
+
+        if (myLength == maxLength) {
+            var next = target;
+            while (next = next.nextElementSibling) {
+                if (next == null)
+                    break;
+                if (next.tagName.toLowerCase() === "input") {
+                    next.focus();
+                    break;
+                }
+            }
+        }
+        // else if (e.keyCode==8 && myLength === 0) {
+
+        // }
+        // Move to previous field if empty (user pressed backspace)
+        else if (myLength === 0) {
+            var previous = target;
+            while (previous = previous.previousElementSibling) {
+                if (previous == null)
+                    break;
+                if (previous.tagName.toLowerCase() === "input") {
+                    previous.focus();
+                    break;
+                }
+            }
+        }
+    }
+    SendOTP(otpVerify: OTP) {
+        
+        if (!this.isLogin) {
+            if (!this.PhoneNumberForm.valid) {
+                this.validateAllFormFields(this.PhoneNumberForm);
+                return false;
+            }
+        }
+        this.spinner.show('LoginSpinner');
+        this.DataService.SendOTP(otpVerify)
+            .subscribe(res => {
+                
+                if (res) {
+                    // if(!this.otpVerification.isTrue)
+                    // {
+                    this.hideCellNumberModal();
+                    this.showOTPModal();
+                }
+                this.spinner.hide('LoginSpinner');
+            },
+            error => {
+                this.spinner.hide('LoginSpinner');
+            })
+    }
+    SendForgotPasswordOTP() {
+        
+        this.validateAllFormFields1(this.OTPForm);
+        if (!this.ForgotPasswordUserForm.valid) {
+            this.validateAllFormFields(this.ForgotPasswordUserForm);
+            return false;
+        }
+        this.spinner.show('LoginSpinner');
+        this.DataService.ForgetPasswordRequest(this.forgotPasswordotpVerification)
+            .subscribe(response => {
+                
+                this.spinner.hide('LoginSpinner');
+                if (response != null) {
+                    if (response.IsVerified && response.code == "2k" && response.digit1 == 200) {
+                        this.isShowForgetPasswordScreen = false;
+                        this.isShowOTPScreen = true;
+                        this.isShowExistingPatientScreen = false;
+                        this.isShowChangePasswordScreen = false;
+                    }
+                    else if (!response.IsVerified) {
+                        if (response.code == "40k" && response.digit1 == 404) {
+                            this.toastr.error("Please enter valid cell number.", 'Error', { enableHtml: true });
+                        }
+                        else if (response.code == "5k" && response.digit1 == 500) {
+                            this.toastr.error("Something went wrong.", 'Error', { enableHtml: true });
+                            this.setVal("");
+                        }
+                        else if (response.code == "50k" && response.digit1 == 505) {
+                            this.toastr.error("Please enter valid OTP.", 'Error', { enableHtml: true });
+                            this.setVal("");
+                        }
+                    }
+                }
+            },
+            error => {
+                this.spinner.hide('LoginSpinner');
+            })
+    }
+    VerifyOTPByCode(event = null) {
+        debugger;
+        // console.log(this.NpmOTPModal)+""+(this.otpVerification.digit1);
+        if (this.otp != '' && this.otp != null && this.otp != undefined) {
+
+            if (this.otp.length < 6) {
+                this.OtpValidation = false;
+                return false;
+            }
+            else {
+                this.OtpValidation = true;
+                this.otpVerification.code = this.otp;
+                this.setVal("");
+            }
+            //this.otpVerification.CellPhone=this.phoneNo;
+            //this.otpVerification.code = this.otpVerification.digit1 + "" + this.otpVerification.digit2 + "" + this.otpVerification.digit3 + "" + this.otpVerification.digit4 + "" + this.otpVerification.digit5 + "" + this.otpVerification.digit6;
+            //this.otpVerification.code = this.otp;
+            if (this.isLogin) {
+                this.otpVerification.CellPhone = this.LoginByNoOtpVerification.CellPhone;
+            }
+            this.spinner.show('LoginSpinner');
+
+            this.DataService.VerifyOtpByCode(this.otpVerification)
+                .subscribe(response => {
+                    
+                    this.spinner.hide('LoginSpinner');
+                    if (response) {
+                        if (response != null) {
+                            if (response.IsVerified && response.code == "2k" && response.digit1 == 200) {
+                                this.hideOTPModal();
+                                this.isOTPVerified = true;
+                                this.isShowForgetPasswordScreen = true;
+                                this.isShowOTPScreen = false;            
+                                this.isShowExistingPatientScreen = false;
+                                this.isShowChangePasswordScreen = false;
+                                this.GetPatientsList();
+                            }
+                            else if (!response.IsVerified) {
+                                if (response.code == "5k" && response.digit1 == 500) {
+                                    this.toastr.error("Something went wrong.", 'Error', { enableHtml: true });
+                                    this.setVal("");
+                                }
+                                else if (response.code == "50k" && response.digit1 == 505) {
+                                    this.toastr.error("Please enter valid OTP.", 'Error', { enableHtml: true });
+                                    this.setVal("");
+                                    if (event != null && event.target != null && event.keyCode == "13") {
+                                        event.target.blur();
+                                    }
+                                }
+                                else if (response.code == "40k" && response.digit1 == 404) {
+                                    this.toastr.error("Please enter valid cell number.", 'Error', { enableHtml: true });
+                                }
+                            }
+                        }
+                        // if(this.isLogin)
+                        // {
+                        //   this.PatientLogin();
+                        // }
+                        // else{
+
+                        // }
+
+
+
+                    }
+
+                },
+                error => {
+                    this.spinner.hide('LoginSpinner');
+                })
+        }
+        else {
+            this.OtpValidation = false;
+            return false;
+        }
+    }
+    CloseOTPModal() {
+        
+        this.isShowForgetPasswordScreen = true;
+        this.isShowOTPScreen = false;
+        this.isShowExistingPatientScreen = false;
+        this.isShowChangePasswordScreen = false;
+        this.otpVerification = new OTP();
+        this.setVal("");
+        this.OtpValidation = true;
+        this.validateAllFormFields1(this.LoginByCellNumberForm);
+        this.validateAllFormFields1(this.ForgotPasswordUserForm);
+        this.validateAllFormFields1(this.PhoneNumberForm);
+    }
+    CloseForgotPasswordModal() {
+        
+        this.isShowForgetPasswordScreen = true;
+        this.isShowOTPScreen = false;
+        this.isShowExistingPatientScreen = false;
+        this.isShowChangePasswordScreen = false;
+        this.forgotPasswordotpVerification = new OTP();
+        this.isValidConfirmPassword = true;
+        this.OtpValidation = true;
+        this.validateAllFormFields1(this.ForgotPasswordUserForm)
+        this.validateAllFormFields1(this.PhoneNumberForm)
+        this.validateAllFormFields1(this.ChangePasswordForm)
+    }
+    VerifyForgotPasswordOTP(event = null) {
+        
+        // if (!this.OTPForm.valid) {
+        //   this.validateAllFormFields(this.OTPForm);
+        //   return false;
+        // }
+        this.forgotPasswordotpVerification.isPassTrue = true;
+        //this.forgotPasswordotpVerification.isTrue = false;
+        this.forgotPasswordotpVerification.isTrue = true;
+        //this.otpVerification.CellPhone=this.phoneNo;
+        if (this.otp != '' && this.otp != null && this.otp != undefined) {
+            if (this.otp.length < 6) {
+                this.OtpValidation = false;
+                return false;
+            }
+            else {
+                this.OtpValidation = true;
+                this.forgotPasswordotpVerification.code = this.otp;
+                this.setVal("");
+            }
+            //this.forgotPasswordotpVerification.code = this.forgotPasswordotpVerification.digit1 + "" + this.forgotPasswordotpVerification.digit2 + "" + this.forgotPasswordotpVerification.digit3 + "" + this.forgotPasswordotpVerification.digit4 + "" + this.forgotPasswordotpVerification.digit5 + "" + this.forgotPasswordotpVerification.digit6;
+            this.spinner.show('LoginSpinner');
+            this.DataService.VerifyOtpByCode(this.forgotPasswordotpVerification)
+                .subscribe(response => {
+                    
+                    this.spinner.hide('LoginSpinner');
+                    if (response) {
+                        if (response != null) {
+                            if (response.IsVerified && response.code == "2k" && response.digit1 == 200) {
+                                // this.hideOTPModal();
+                                // this.isOTPVerified=true;
+                                this.GetPatientsListForgot();
+                            }
+                            else if (!response.IsVerified) {
+                                if (response.code == "5k" && response.digit1 == 500) {
+                                    this.toastr.error('Something went wrong.', 'Error', { enableHtml: true });
+                                    this.setVal("");
+                                }
+                                else if (response.code == "50k" && response.digit1 == 505) {
+                                    this.toastr.error('Please enter valid OTP.', 'Error', { enableHtml: true });
+                                    this.setVal("");
+                                    if (event != null && event.target != null && event.keyCode == "13") {
+                                        event.target.blur();
+                                    }
+                                }
+                                else if (response.code == "40k" && response.digit1 == 404) {
+                                    this.toastr.error('Please enter valid cell number.', 'Error', { enableHtml: true });
+                                }
+                            }
+                        }
+                        // if(this.isLogin)
+                        // {
+                        //   this.PatientLogin();
+                        // }
+                        // else{
+
+                        // }
+
+
+
+                    }
+                },
+                error => {
+                    this.spinner.hide('LoginSpinner');
+                })
+        }
+        else {
+            this.OtpValidation = false;
+            return false;
+        }
+    }
+
+    VerifyOTP() {
+        debugger;
+        if (!this.OTPForm.valid) {
+            this.validateAllFormFields(this.OTPForm);
+            return false;
+        }
+        this.otpVerification.CellPhone = this.phoneNo;
+        this.otpVerification.code = this.otpVerification.digit1 + "" + this.otpVerification.digit2 + "" + this.otpVerification.digit3 + "" + this.otpVerification.digit4 + "" + this.otpVerification.digit5 + "" + this.otpVerification.digit6;
+        this.spinner.show('LoginSpinner');
+        this.DataService.VerifyOTP(this.otpVerification)
+            .subscribe(res => {
+                
+                if (res) {
+                    // if(this.isLogin)
+                    // {
+                    //   this.PatientLogin();
+                    // }
+                    // else{
+                    this.spinner.hide('LoginSpinner');
+                    this.hideOTPModal();
+                    this.isOTPVerified = true;
+                    this.GetPatientsList();
+                    // }
+
+
+
+                }
+
+            },
+            error => {
+            })
+    }
+    GetPatientsListForgot() {
+        
+        this.spinner.show('LoginSpinner');
+        this.DataService.GetPatientsList(this.forgotPasswordotpVerification)
+            .subscribe(res => {
+                
+                this.spinner.hide('LoginSpinner');
+                if (res) {
+                    this.PatientsList = res;
+                    if (this.PatientsList != undefined && this.PatientsList != null) {
+                        this.isShowForgetPasswordScreen = false;
+                        this.isShowOTPScreen = false;
+
+                        if (this.PatientsList.length == 0) {
+                            //this.UserLoginInfo.CellNumber=this.PatientsList[0].PatientCellNumber;
+                            //this.UserLoginInfo.isMRN=false;
+                            this.isShowChangePasswordScreen = true;
+                            this.forgotPasswordUserLoginInfo.password = '';
+                            this.forgotPasswordUserLoginInfo.ConfirmPassword = '';
+                            this.isShowExistingPatientScreen = false;
+
+                        }
+                        else {
+                            this.forgotPasswordUserLoginInfo.MRN = "0";
+                            this.isShowChangePasswordScreen = false;
+                            this.isShowExistingPatientScreen = true;
+                        }
+
+
+                    }
+                }
+            },
+            error => {
+                this.spinner.hide('LoginSpinner');
+            })
+
+    }
+    GetPatientsList() {
+        
+        if (this.isOTPVerified) {
+            this.spinner.show('LoginSpinner');
+            this.DataService.GetPatientsList(this.otpVerification)
+                .subscribe(res => {
+                    
+                    this.spinner.hide('LoginSpinner');
+                    if (res) {
+                        this.PatientsList = res;
+                        if (this.PatientsList != undefined && this.PatientsList != null) {
+                            if (this.PatientsList.length == 0) {
+                                //this.UserLoginInfo.CellNumber=this.PatientsList[0].PatientCellNumber;
+                                //this.UserLoginInfo.isMRN=false;
+                                if (this.otpVerification.isTrue) {
+                                    this.patientProfile.PatientCellNumber = this.UserLoginInfo.CellNumber;
+                                }
+                                else {
+                                    this.patientProfile.PatientCellNumber = this.otpVerification.CellPhone;
+                                }
+                                /// this.showFirstUserModal();
+                                this.showSignUpModal();
+                            }
+                            else {
+                                this.patientProfile.PatientMRN = 0;
+                                this.showAlreadyRegisteredModal();
+                            }
+
+
+                        }
+                    }
+                },
+                error => {
+                    this.spinner.hide('LoginSpinner');
+                })
+        }
+        else {
+
+        }
+
+    }
+    SaveFirstPatient() {
+        debugger;
+        if (!this.firstUserForm.valid) {
+            this.validateAllFormFields(this.firstUserForm);
+            return false;
+        }
+        this.spinner.show('LoginSpinner');
+        this.DataService.SaveFirstPatient(this.patientProfile)
+            .subscribe(res => {
+                
+                this.spinner.hide('LoginSpinner');
+                if (res) {
+                    if (res) {
+                        // if(this.PatientsList.length==1)
+                        // {
+                        if (res.IsDuplicate) {
+                            this.toastr.error('Patient already exists.', 'Error', { enableHtml: true });
+                            return;
+                        }
+                        this.UserLoginInfo.CellNumber = this.patientProfile.PatientCellNumber;
+                        this.UserLoginInfo.isMRN = true;
+                        this.UserLoginInfo.MRN = res.PatientMRN;
+                        this.UserLoginInfo.password = "Mtbc@123";
+                        this.PatientLogin();
+
+                        // }
+                        // else{
+                        //   //this.showAlreadyRegisteredModal();
+                        // }
+
+
+                    }
+                }
+            },
+            error => {
+                this.spinner.hide('LoginSpinner');
+            })
+    }
+    ResendOTP() {
+        debugger;
+        this.spinner.show('LoginSpinner');
+        this.DataService.ResendOTP(this.otpVerification)
+            .subscribe(res => {
+                
+                this.spinner.hide('LoginSpinner');
+                if (res) {
+                    // if(!this.otpVerification.isTrue)
+                    // {
+                    this.toastr.success('Code resend successfully.', 'Success', { enableHtml: true });
+                }
+            },
+            error => {
+                this.spinner.show('LoginSpinner');
+            })
+    }
+    dobMaxCheck: boolean;
+    checkAgeValidation() {
+        //this.dobMaxCheck=false;
+        if (this.patientProfile.PatientAge) {
+
+            if (Number(this.patientProfile.PatientAge) > 150) {
+                //this.toastr.error("Please enter valid your age.", "Error");
+                this.dobMaxCheck = true;
+                return;
+            } else {
+                this.dobMaxCheck = false;
+            }
+        }
+    }
+    SavePatient() {
+        
+        if (!this.registertUserForm.valid) {
+            this.validateAllFormFields(this.registertUserForm);
+            return false;
+        }
+        if (this.otpVerification.isTrue) {
+            this.patientProfile.PatientCellNumber = this.LoginByNoUserLoginInfo.CellNumber;
+        }
+        else {
+            this.patientProfile.PatientCellNumber = this.otpVerification.CellPhone;
+        }
+
+        if (Number(this.patientProfile.PatientAge) > 150) {
+            this.dobMaxCheck = true;
+            return;
+        } else {
+            this.dobMaxCheck = false;
+        }
+        
+        if (!this.isValidCNICPassport) {
+            return;
+          }
+
+        this.patientProfile.Patient_Image = this.doctorprofileimage;
+        this.spinner.show('LoginSpinner');
+        this.DataService.SaveFirstPatient(this.patientProfile)
+            .subscribe(res => {
+                
+                this.spinner.hide('LoginSpinner');
+                if (res) {
+                    if (res) {
+                        // if(this.PatientsList.length==1)
+                        // {
+                        if (res.IsDuplicate) {
+                            this.toastr.error('Patient already exists.', 'Error', { enableHtml: true });
+                            return;
+                        }
+                        this.UserLoginInfo.CellNumber = this.patientProfile.PatientCellNumber;
+                        this.UserLoginInfo.isMRN = true;
+                        this.UserLoginInfo.MRN = res.PatientMRN;
+                        this.UserLoginInfo.password = "Mtbc@123";
+                        this.PatientLogin();
+
+                        // }
+                        // else{
+                        //   //this.showAlreadyRegisteredModal();
+                        // }
+
+
+                    }
+                }
+            },
+            error => {
+                this.spinner.hide('LoginSpinner');
+            })
+    }
+    changePatient(event, option) {
+        if (option == 1) {
+            if (this.PatientsList != undefined && this.PatientsList != null && this.PatientsList.length > 0) {
+                var index = this.PatientsList.findIndex(x => x.PatientMRN == event.target.value);
+                if (index != undefined && index != null && index != -1) {
+                    this.patientProfile = this.PatientsList[index];
+                    this.UserLoginInfo.CellNumber = this.patientProfile.PatientCellNumber;
+                    this.UserLoginInfo.MRN = this.patientProfile.PatientMRN.toString();
+                    this.UserLoginInfo.password = "Mtbc@123";
+                    this.UserLoginInfo.isMRN = true;
+                    this.PatientLogin();
+                }
+            }
+        }
+        else {
+            this.isShowForgetPasswordScreen = false;
+            this.isShowOTPScreen = false;
+            this.isShowExistingPatientScreen = false;
+            this.isShowChangePasswordScreen = true;
+            this.forgotPasswordUserLoginInfo.password = '';
+            this.forgotPasswordUserLoginInfo.ConfirmPassword = '';
+            if (this.PatientsList != undefined && this.PatientsList != null && this.PatientsList.length > 0) {
+                var index = this.PatientsList.findIndex(x => x.PatientMRN == event.target.value);
+                if (index != undefined && index != null && index != -1) {
+                    var patientProfile = this.PatientsList[index];
+                    this.forgotPasswordUserLoginInfo.CellNumber = patientProfile.PatientCellNumber;
+                    this.forgotPasswordUserLoginInfo.MRN = patientProfile.PatientMRN.toString();
+                }
+            }
+        }
+
+    }
+    LoginByPhoneNo() {
+        
+        this.LoginByNoUserLoginInfo.MRN = "";
+        
+        if (!this.LoginByCellNumberForm.valid) {
+            this.validateAllFormFields(this.LoginByCellNumberForm);
+            return false;
+        }
+        // this.UserLoginInfo.CellNumber=this.patientProfile.PatientCellNumber;
+        this.isLogin = true;
+        this.LoginByNoUserLoginInfo.isMRN = false;
+        this.LoginByNoOtpVerification.isTrue = true;
+        this.otpVerification.isTrue = true;
+        this.otpVerification.CellPhone = this.LoginByNoUserLoginInfo.CellNumber;
+        this.LoginByNoOtpVerification.CellPhone = this.LoginByNoUserLoginInfo.CellNumber;
+        //this.phoneNo=this.UserLoginInfo.CellNumber;
+        this.SendOTP(this.LoginByNoOtpVerification);
+    }
+    LoginByMRN() {
+        this.UserLoginInfo.CellNumber = "";
+        if (!this.LoginByMRNForm.valid) {
+            this.validateAllFormFields(this.LoginByMRNForm);
+            return false;
+        }
+        this.PatientLogin();
+    }
+    PatientLogin() {
+        
+        sessionStorage.removeItem('AuthToken');
+
+        if(!Number(this.UserLoginInfo.MRN)){
+            this.toastr.error('Please enter valid MRN and password', 'Error', { enableHtml: true });
+            return;
+        }
+
+
+        this.spinner.show('LoginSpinner');
+        this.DataService.userLoginPost(JSON.parse(JSON.stringify(this.UserLoginInfo))).subscribe(
+            response => {
+                this.spinner.hide('LoginSpinner');
+                
+                if (response != null && response != undefined) {
+                    if (response.Status == 200 || response.statusText == "OK") {
+
+                        if (response.ok) {
+                            sessionStorage.setItem("AuthToken", response.headers.get("Token"));
+                            this.DataService.UpdateIsLoggedIn(true);
+                            let link: any[] = ['/home'];
+                            this._router.navigate(link);
+                            if (this.UserLoginInfo.rememberMe) {
+                                // var name;
+                                // if(Number(this.userLoginInfo.emailUserName)){
+                                //       name = this.encrypt(this.inputValidations.maskingPhoneNumber(val));
+                                // }
+                                // else{
+                                //      name = this.encrypt(this.userEmailCellName);
+                                // }
+                                var name= this.encrypt(this.UserLoginInfo.MRN);
+                                var passwrd = this.encrypt(this.UserLoginInfo.password);
+                                this.setCookie('uPerson', name);
+                                this.setCookie('uPwd', passwrd);
+                            }
+                            // sessionStorage.setItem("AuthToken", response.headers.get("Token"));
+                            //let link: any[] = ['MainPatient'];
+                            //this._router.navigate(link);
+                            // this._sessionTimeoutService.setUserLoggedIn(true);
+                            //this._sessionTimeoutService.reset();
+                        }
+                        else {
+                            // if(Number(this.userLoginInfo.emailUserName)){
+                            //   this.toastr.error('Please enter valid cell number and password', 'Error', { enableHtml: true });
+                            //   sessionStorage.setItem("AuthToken", "");
+                            // }
+                            // else if(this.userLoginInfo.emailUserName.includes('@')){
+                            //   this.toastr.error('Please enter valid email address and password', 'Error', { enableHtml: true });
+                            //   sessionStorage.setItem("AuthToken", "");
+                            // }
+                            // else{
+                            //   this.toastr.error('Please enter valid email address and password', 'Error', { enableHtml: true });
+                            //   sessionStorage.setItem("AuthToken", "");
+                            // }
+                        }
+                    }
+                }
+                //else {
+                //   this.spinner.hide('LoginSpinner');
+                //   if(Number(this.userLoginInfo.emailUserName)){
+                //     this.toastr.error('Please enter valid cell number and password', 'Error', { enableHtml: true });
+                //     sessionStorage.setItem("AuthToken", "");
+                //   }
+                //   else if(this.userLoginInfo.emailUserName.includes('@')){
+                //     this.toastr.error('Please enter valid email address and password', 'Error', { enableHtml: true });
+                //     sessionStorage.setItem("AuthToken", "");
+                //   }
+                //   else{
+                //     this.toastr.error('Please enter valid email address and password', 'Error', { enableHtml: true });
+                //     sessionStorage.setItem("AuthToken", "");
+                //   }
+                // }
+            },
+            error => {
+                this.spinner.hide('LoginSpinner');
+                // this.spinner.hide('LoginSpinner');
+                // if(Number(this.userLoginInfo.emailUserName)){
+                //   this.toastr.error('Please enter valid cell number and password', 'Error', { enableHtml: true });
+                //   sessionStorage.setItem("AuthToken", "");
+                // }
+                // else if(this.userLoginInfo.emailUserName.includes('@')){
+                //   this.toastr.error('Please enter valid email address and password', 'Error', { enableHtml: true });
+                //   sessionStorage.setItem("AuthToken", "");
+                // }
+                // else{
+                this.toastr.error('Please enter valid MRN and password', 'Error', { enableHtml: true });
+                //   sessionStorage.setItem("AuthToken", "");
+                // }
+                console.error(error);
+            }
+        )
+    }
+    validateAllFormFields(formGroup: FormGroup) {
+        Object.keys(formGroup.controls).forEach(field => {
+            const control = formGroup.get(field);
+            if (control instanceof FormControl) {
+                control.markAsTouched({ onlySelf: true });
+            } else if (control instanceof FormGroup) {
+                this.validateAllFormFields(control);
+            }
+        });
+    }
+    validateAllFormFields1(formGroup: FormGroup) {
+        Object.keys(formGroup.controls).forEach(field => {
+            const control = formGroup.get(field);
+            if (control instanceof FormControl) {
+                control.markAsUntouched({ onlySelf: true });
+                control.markAsPristine({ onlySelf: true });
+            } else if (control instanceof FormGroup) {
+                this.validateAllFormFields(control);
+            }
+        });
+    }
+    /* ***Show Hide Bootstrap Modals*** */
+    showCellNumberModal() {
+        this.setVal("");
+        this.CellNumberModal.config = this.config;
+        this.otpVerification = new OTP();
+        this.CellNumberModal.show();
+    }
+    hideCellNumberModal() {
+        this.CellNumberModal.hide();
+    }
+    hideOTPModal() {
+        this.OTPModal.hide();
+    }
+    showOTPModal() {
+        
+        this.OTPModal.config = this.config;
+        this.OTPForm.controls.digit1.markAsPristine({ onlySelf: true });
+        this.OTPForm.controls.digit1.markAsUntouched({ onlySelf: true });
+        this.OTPForm.controls.digit2.markAsPristine({ onlySelf: true });
+        this.OTPForm.controls.digit2.markAsUntouched({ onlySelf: true });
+        this.OTPForm.controls.digit3.markAsPristine({ onlySelf: true });
+        this.OTPForm.controls.digit3.markAsUntouched({ onlySelf: true });
+        this.OTPForm.controls.digit4.markAsPristine({ onlySelf: true });
+        this.OTPForm.controls.digit4.markAsUntouched({ onlySelf: true });
+        this.OTPForm.controls.digit5.markAsPristine({ onlySelf: true });
+        this.OTPForm.controls.digit5.markAsUntouched({ onlySelf: true });
+        this.OTPForm.controls.digit6.markAsPristine({ onlySelf: true });
+        this.OTPForm.controls.digit6.markAsUntouched({ onlySelf: true });
+
+        this.OTPModal.show();
+    }
+
+    maskingCellNumber(val){
+        
+        if(val!='' && val != null && val != undefined){
+            if(val.length ==10){
+              return val.replace(/^(.{3})(.*)$/, "$1 $2");
+            }
+        }
+      }
+      
+    showForgotPasswordModel(){
+        this.ForgotPasswordModal.config = this.config;
+        this.ForgotPasswordModal.show();
+    }
+    hideAlreadyRegisteredModal() {
+        // this.otpVerification.CellPhone = '';
+        this.validateAllFormFields1(this.PhoneNumberForm);
+        this.AlreadyRegisteredModal.hide();
+    }
+    showAlreadyRegisteredModal() {
+        this.AlreadyRegisteredModal.config = this.config;
+        this.AlreadyRegisteredModal.show();
+    }
+    hideFirstUserModal() {
+        this.FirstUserModal.hide();
+    }
+    showFirstUserModal() {
+        this.FirstUserModal.config = this.config;
+        this.FirstUserModal.show();
+    }
+    hideSignUpModal() {
+        this.patientProfile.FirstName='';
+        this.patientProfile.LastName='';
+        this.patientProfile.PatientAge='';
+        this.patientProfile.PatientGender='';
+        this.patientProfile.PatientCNIC='';
+        this.patientProfile.PatientEmail='';
+        this.validateAllFormFields1(this.registertUserForm);
+        this.SignUpModal.hide();
+    }
+    showSignUpModal() {
+        debugger;
+        this.SignUpModal.config = this.config;
+        this.hideAlreadyRegisteredModal();
+        this.SignUpModal.show();
+        this.patientProfile.PatientGender = '';
+        if (this.isLogin) {
+            this.patientProfile.PatientCellNumber = this.LoginByNoUserLoginInfo.CellNumber;
+        } else {
+            this.patientProfile.PatientCellNumber = this.otpVerification.CellPhone;
+        }
+
+    }
+    hideForgotPasswordModal() {
+        this.ForgotPasswordModal.hide();
+        // $('.modal-backdrop').remove();
+    }
+    showForgotPasswordModal() {
+        this.ForgotPasswordModal.config = this.config;
+        this.ForgotPasswordModal.show();
+        this.otpVerification = new OTP();
+        this.UserLoginInfo = new userLoginInfo();
+    }
+
+    mainPage() {
+        
+        let link: any[] = [''];
+        this._router.navigate(link);
+    }
+
+    routeHomePage() {
+        // let link: any[] = [''];
+        // this._router.navigate(link);
+        location.href = '';
+    }
+
+    OpenCameraSetting() {
+        this.isImageCaptured = false;
+        this.ResetCanvas();
+        this.TakePictureModal.show();
+        this.cameraOn = true;
+        this.startVideo();
+    }
+
+    ResetCanvas() {
+        // Start To reset Canvas
+        let canvas = document.getElementById('canvas') as HTMLCanvasElement;
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        // End To reset Canvas
+        if (this.imageURL == undefined || this.imageURL == '' || this.imageURL == null) {
+            //this.imageURL = "./assets/home-images/PatientPictureDefault.jpg";
+            this.imageURL = "./assets/home-images/take-picture.png";
+            //assets/home-images/take-picture.png
+
+        }
+    }
+
+    startVideo() {
+        if (this.cameraOn) {
+            this.initVideo(this.cameraOn);
+        }
+        else {
+            this.initVideo(this.cameraOn);
+        }
+    }
+
+    initVideo(value) {
+        this.getMediaStream(value)
+            .then((stream) => {
+                this.stream = stream;
+                this.streaming = true;
+                this.attachVideo(stream);
+            })
+            .catch((err) => {
+                this.streaming = false;
+                this.error = err.message + " (" + err.name + ":" + err.constraintName + ")";
+            });
+    }
+
+    attachVideo(stream) {
+        this.render.setProperty(this.videoElement.nativeElement, 'srcObject', stream);
+        this.render.listen(this.videoElement.nativeElement, 'play', (event) => {
+            this.videoHeight = this.videoElement.nativeElement.videoHeight;
+            this.videoWidth = this.videoElement.nativeElement.videoWidth;
+        });
+    }
+
+    private getMediaStream(value): Promise<MediaStream> {
+        const video_constraints = { video: true };
+        const _video = this.video.nativeElement;
+        return new Promise<MediaStream>((resolve, reject) => {
+            $("#video_Fail").attr('style', 'display:none');
+            $("#video_permission_denied").attr('style', 'display:none');
+            return navigator.mediaDevices.
+                getUserMedia(video_constraints)
+                .then(stream => {
+                    (<any>window).stream = stream;
+                    _video.srcObject = stream;
+                    _video.onloadedmetadata = function (e: any) { };
+                    if (value == true) {
+                        setTimeout(() => {
+                            this.captureBtn = true;
+                        }, 1000)
+                        setTimeout(() => {
+                            _video.play();
+                        }, 2000)
+                    }
+                    else {
+                        this.stream.getTracks().forEach(track => track.stop());
+                        stream.getTracks().forEach(function (track) {
+                            track.stop();
+                            this.streaming = value;
+                            this.cameraOn = value;
+                            _video.stop();
+                        });
+                    }
+                    return resolve(stream);
+                })
+                .catch((err) => {
+                    if (!value) {
+                        this.cameraOn = value;
+                    }
+                    else {
+                        this.cameraOn = false;
+                        this.toastr.warning("Camera is not connected, please check your camera.", "Warning");
+                        if (err.name == 'NotAllowedError') {
+                            $("#video_permission_denied").attr('style', 'display:block');
+                            $("#video_Fail").attr('style', 'display:none');
+                        }
+                        else
+                            $("#video_Fail").attr('style', 'display:block');
+                    }
+                }
+                );
+        });
+    }
+
+    cancelUploadModel() {
+        this.TakePictureModal.hide();
+        if (typeof this.stream != undefined && this.stream != null) {
+            this.stream.getTracks().forEach(function (track) {
+              track.stop();
+            });
+          }
+    }
+
+    Capture() {
+        
+        if (!this.cameraOn) {
+
+            // this.toastr.warning("Camera is not connected or permission denied, please check/connect or allow camera permission.Close camera dialog window and try again", "Warning");
+            return false;
+        }
+        this.classToApply = true;
+        this.render.setProperty(this.canvas.nativeElement, 'width', this.videoWidth);
+        this.render.setProperty(this.canvas.nativeElement, 'height', this.videoHeight);
+        this.canvas.nativeElement.getContext('2d').drawImage(this.videoElement.nativeElement, 0, 0);
+
+        let canvas = document.getElementById('canvas') as HTMLCanvasElement;
+        var img = new Image();
+        img.src = canvas.toDataURL('image/png');
+        this.imageURL = img.src;
+        this.isImageCaptured = true;
+    }
+
+    UploadPicture2() {
+        if (this.imageURL == "../../../../assets/images/Testimonial_1.png") {
+            this.toastr.warning("Please take a picture to upload.", "Warning");
+            return false;
+        }
+        if (this.imageURL != undefined && this.imageURL != null) {
+            this.Patientpicture.baseLink = this.imageURL;
+            this.Patientpicture.oldPicName = this.doctorprofileimage;
+            this.TakePictureModal.hide();
+            this.doctorprofileimage = this.Patientpicture.baseLink;
+
+            if (typeof this.stream != undefined && this.stream != null) {
+                this.stream.getTracks().forEach(function (track) {
+                  track.stop();
+                });
+              } 
+        }
+
+    }
+
+    SetFolderPath() {
+        let clientDomain = "";
+        clientDomain = window.location.origin + "/";
+        if (clientDomain.includes('localhost') || clientDomain.includes("https://testing.talkmd.com/") || clientDomain.includes("http://testing.talkmd.com/")) {
+            this.Patientpicture.folderPath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/";
+        }
+        else if (clientDomain.includes("https://uatcarecloud.talkmd.com/") || clientDomain.includes("http://uatcarecloud.talkmd.com/")){
+            this.Patientpicture.folderPath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/";
+        }
+        else if (clientDomain.includes("https://talkmd.com/") || clientDomain.includes("http://talkmd.com/") || clientDomain.includes("https://www.talkmd.com/") || clientDomain.includes("http://www.talkmd.com/")) {
+            // this.Patientpicture.folderPath = "WebEHR_Documents10/1013349/PATIENT PICTURE/"
+            this.Patientpicture.folderPath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/";
+        }
+        else if (clientDomain.includes("https://careclinic.live/") || clientDomain.includes("http://careclinic.live/") || clientDomain.includes("https://www.careclinic.live/") || clientDomain.includes("http://www.careclinic.live/")) {
+            // this.Patientpicture.folderPath = "WebEHR_Documents10/1013349/PATIENT PICTURE/"
+            this.Patientpicture.folderPath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/";
+        }
+        else if (clientDomain.includes("https://telemedicine.mtbc.com/") || clientDomain.includes("http://telemedicine.mtbc.com/")) {
+            // this.Patientpicture.folderPath = "WebEHR_Documents10/5110643/PATIENT PICTURE/"
+            this.Patientpicture.folderPath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/";
+        }
+    }
+
+    CloseCameraSetting() {
+        this.ResetCanvas();
+        this.imageURL = '';
+        this.classToApply = false;
+        this.captureBtn = false;
+        if (this.cameraOn == true) {
+
+            this.initVideo(false);
+        }
+    }
+
+    onUploadSuccess($event, isDeletePic?: boolean) {
+        var FilePath = "";
+        let clientDomain = "";
+        clientDomain = window.location.origin + "/";
+        if (clientDomain.includes('localhost') || clientDomain.includes("https://testing.talkmd.com/") || clientDomain.includes("http://testing.talkmd.com/")) {
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+        }
+        else if (clientDomain.includes("https://uatcarecloud.talkmd.com/") || clientDomain.includes("http://uatcarecloud.talkmd.com/")){
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+        }
+        else if (clientDomain.includes("https://talkmd.com/") || clientDomain.includes("http://talkmd.com/") || clientDomain.includes("https://www.talkmd.com/") || clientDomain.includes("http://www.talkmd.com/")) {
+            // FilePath = "WebEHR_Documents10/1013349/PATIENT PICTURE/"
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+        }
+        else if (clientDomain.includes("https://careclinic.live/") || clientDomain.includes("http://careclinic.live/") || clientDomain.includes("https://www.careclinic.live/") || clientDomain.includes("http://www.careclinic.live/")) {
+            // FilePath = "WebEHR_Documents10/1013349/PATIENT PICTURE/"
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+        }
+        else if (clientDomain.includes("https://telemedicine.mtbc.com/") || clientDomain.includes("http://telemedicine.mtbc.com/")) {
+            // FilePath = "WebEHR_Documents10/5110643/PATIENT PICTURE/"
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+        }
+        let form = {
+            FilePath: FilePath + $event,//new Date().toLocaleDateString() + $event.srcElement.files[0].name,//
+            patient_Account: 0,
+            file: $event,
+            isDeleteImg: isDeletePic,
+            oldPhotoPath: this.doctorprofileimage
+        };
+        let tempVar = <PatientProfile>JSON.parse(sessionStorage.getItem("UserProfile"));
+        if (tempVar != null) {
+            tempVar.Patient_Image = form.FilePath;
+            sessionStorage.setItem("UserProfile", JSON.stringify(tempVar));
+        }
+        this.doctorprofileimage = ImageBase.BaseImageUrl + form.FilePath;
+        this.avatarsm = form.FilePath;
+        this.DataService.UpdateUrl(this.avatarsm);
+        // if (isDeletePic) {
+        //   form.isDeleteImg=true;
+        // }
+        this.DataService.UpdatePatientImage(form).subscribe(
+            response => {
+                this.toastr.success("Profile picture has been changed.", "Image updated");
+                $('#profilePic').val('');
+
+            },
+            error => {
+                //this.ErrorHandle(error);
+                this.toastr.error("Some Error Occured", "");
+                console.error(error);
+            }
+        );
+    }
+
+    onfileUpload(fileInput: any) {
+        
+        this.fileData = <File>fileInput.target.files[0];
+        if(this.fileData.type=='image/jpeg' || this.fileData.type=='image/png' || this.fileData.type=='image/jpg'){
+            this.preview();
+        }
+        else{
+            this.toastr.error("Image format is not supported.", "Error");
+        }
+    }
+
+    getFileExtension(fileName) {
+        return fileName.toLowerCase().split('.').pop();
+    }
+
+    preview() {
+        // Show preview 
+
+        var mimeType = this.fileData.type;
+        if (mimeType.match(/image\/*/) == null) {
+            return;
+        }
+        var reader = new FileReader();
+        reader.readAsDataURL(this.fileData);
+        reader.onload = (_event) => {
+            this.previewUrl = reader.result;
+            this.doctorprofileimage = reader.result.toString();
+        }
+    }
+
+    RemoveProPictureModal() {
+        if (this.doctorprofileimage.includes("man-avatar.png") || this.doctorprofileimage.includes("women-avatar.png") || this.doctorprofileimage.includes("unknown-avatar.png")) {
+            this.toastr.warning('Please take or upload picture to delete.', 'No Picture');
+            return false;
+        }
+        else {
+            this.TakePictureRemoveModel.show();
+        }
+    }
+
+    removeProfilePicture() {
+
+        if (this.doctorprofileimage != undefined && this.doctorprofileimage != null) {
+            this.spinner.show('LoginSpinner');
+            this.onUploadSuccess(this.doctorprofileimage, true);
+            this.spinner.hide('LoginSpinner');
+            this.TakePictureRemoveModel.hide();
+        }
+        else {
+            this.spinner.hide('LoginSpinner');
+            this.TakePictureRemoveModel.hide();
+            this.toastr.error('Something went wrong.', '', {
+                timeOut: 3000
+            });
+        }
+    }
+    cancelDeleteProfileModel() {
+        this.TakePictureRemoveModel.hide();
+    }
+
+    testtest22() {
+        
+    }
+
+    // Start by Haris Khurshid
+    passwordRegixShow() {
+        document.getElementById("message").style.display = "block";
+    }
+    passwordRegixValidation(value) {
+        
+        this.forgotPasswordUserLoginInfo.password
+        document.getElementById("message").style.display = "block";
+        var letter = document.getElementById("letter");
+        var capital = document.getElementById("capital");
+        var number = document.getElementById("number");
+        var length = document.getElementById("length");
+        var specialcharacter = document.getElementById("specialcharacter");
+
+        var lowerCaseLetters = /[a-z]/g;
+        if (value.match(lowerCaseLetters)) {
+            letter.classList.remove("invalid");
+            letter.classList.add("valid");
+        } else {
+            letter.classList.remove("valid");
+            letter.classList.add("invalid");
+        }
+
+        // Validate capital letters
+        var upperCaseLetters = /[A-Z]/g;
+        if (value.match(upperCaseLetters)) {
+            capital.classList.remove("invalid");
+            capital.classList.add("valid");
+        } else {
+            capital.classList.remove("valid");
+            capital.classList.add("invalid");
+        }
+
+        // Validate numbers
+        var numbers = /[0-9]/g;
+        if (value.match(numbers)) {
+            number.classList.remove("invalid");
+            number.classList.add("valid");
+        } else {
+            number.classList.remove("valid");
+            number.classList.add("invalid");
+        }
+
+        // Validate Special Character
+        var specialCharacter = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/g;
+        // var specialCharacter = /[!@#\$%\^\&*\)\(+=._-]+$/g;
+        if (value.match(specialCharacter)) {
+            specialcharacter.classList.remove("invalid");
+            specialcharacter.classList.add("valid");
+        } else {
+            specialcharacter.classList.remove("valid");
+            specialcharacter.classList.add("invalid");
+        }
+
+        // Validate length
+        if (value.length >= 8) {
+            length.classList.remove("invalid");
+            length.classList.add("valid");
+        } else {
+            length.classList.remove("valid");
+            length.classList.add("invalid");
+        }
+
+        if (letter.classList.contains('valid') && capital.classList.contains('valid') && number.classList.contains('valid') && length.classList.contains('valid') && specialcharacter.classList.contains('valid')) {
+            document.getElementById("message").style.display = "none";
+        }
+
+
+    }
+    passwordRegixHide() {
+        document.getElementById("message").style.display = "none";
+    }
+    CreateChangePasswordForm() {
+        let passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])(?=.{8,})/g;
+        this.ChangePasswordForm = new FormGroup({
+            Password: new FormControl("", [Validators.minLength(8), Validators.required, Validators.pattern(passwordRegex)]),
+            ConfirmPassword: new FormControl("", [Validators.minLength(8), Validators.required, Validators.pattern(passwordRegex)])
+        })
+    }
+
+
+    //Started by Haris Khurshid
+    pasteCnicPassportNumber(event){
+        if(event!='' && event!= null && event != undefined){
+          let clipboardData = event.clipboardData;
+          let value: string = clipboardData.getData('text');
+      
+          if(Number(value)){
+            this.CnicMaxLength = 13;
+          }
+          
+        }  
+      }
+    
+      dashErrorCnicPassport(event){
+
+        debugger;
+         if(event!='' && event!= null && event!=undefined){
+           let value: any = (event.target as HTMLInputElement).value;
+        
+           if(value.length==13 || value.length==9 ){
+             return;
+           }
+    
+           if (event.which === 45) {
+            event.preventDefault();
+            this.toastr.info("Please enter CNIC/Passport without dashes(-).", "Alert");
+            return;
+            }
+           }
+         
+      }
+      
+    validateCnicPassport(value) {
+
+          if (Number(value)) {
+            // 
+            this.CnicMaxLength = 13;
+          }
+          else {
+       
+            this.CnicMaxLength = 9;
+          }
+
+      }
+      forceInputUppercase(e) {
+        var start = e.target.selectionStart;
+        var end = e.target.selectionEnd;
+        e.target.value = e.target.value.toUpperCase();
+        e.target.setSelectionRange(start, end);
+      }
+      removeCnicMasking(event: any) {
+        let value: string = (event.target as HTMLInputElement).value;
+        if (value != "") {
+          value = this.inputValidations.resetCNICMasking(value);
+          this.patientProfile.PatientCNIC = value;
+        }
+      }
+
+      maskingCnicPassport(cnicnumber) {
+        
+        if (cnicnumber.length <= 0) {
+          this.isValidCNICPassport = true;
+          return;
+        }
+        var regsaid = /[a-zA-Z]{2}[0-9]{7}/;
+        // var s2 = ("" + cnicnumber).replace(/\D/g, '');
+        var s2 = cnicnumber;
+        if (s2.match(/^(\d{5})(\d{7})(\d{1})$/)) {
+          
+          var m = s2.match(/^(\d{5})(\d{7})(\d{1})$/);
+          var number = (!m) ? null : + m[1] + "-" + m[2] + "-" + m[3];
+          this.patientProfile.PatientCNIC = number;
+          this.isValidCNICPassport = true;
+        }
+        else if (regsaid.test(s2) == true) {
+          
+          this.isValidCNICPassport = true;
+        }
+        else {
+          
+          this.isValidCNICPassport = false;
+        }
+      }
+// Remember Me code here ---------------------------------------------------------------------------
+
+encrypt(clear) {
+    // encrypt() : encrypt the given clear text
+    var cipher = CryptoJS.AES.encrypt(clear, crypt.secret);
+    cipher = cipher.toString();
+    return cipher;
+  }
+
+  decrypt(cipher) {
+    // decrypt() : decrypt the given cipher text
+    var decipher = CryptoJS.AES.decrypt(cipher, crypt.secret);
+    decipher = decipher.toString(CryptoJS.enc.Utf8);
+    return decipher;
+  }
+
+  setCookie(cname, cvalue) {
+
+    var d = new Date();
+    d.setTime(d.getTime() + (10 * 365 * 24 * 60 * 60));
+    var expires = "expires=" + d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+  }
+  
+  isCookieUNme: boolean;
+  isCookieUPwd: boolean;
+  rememberMe: boolean;
+  checkCookie() {
+
+    var user = this.getCookie("uPerson");
+    if (user != "") {
+      user = this.decrypt(user);
+      //this.userEmailCellName = user;
+      this.UserLoginInfo.MRN=user;
+      this.isCookieUNme = true;
+    }
+
+    var pwd = this.getCookie("uPwd");
+    if (pwd != "") {
+      pwd = this.decrypt(pwd);
+      //this.userLoginInfo.password = pwd;
+      //this.LoginByNoUserLoginInfo.password=pwd;
+      this.UserLoginInfo.password=pwd;
+      this.isCookieUPwd = true;
+    }
+
+    if (this.isCookieUNme && this.isCookieUPwd) {
+      //this.userLoginInfo.rememberMe = true;
+      this.LoginByNoUserLoginInfo.rememberMe=true;
+      this.UserLoginInfo.rememberMe=true;
+    }
+    else if (this.isCookieUNme) {
+      user = this.decrypt(user);
+      //this.userEmailCellName = user;
+      this.UserLoginInfo.MRN=user;
+      this.isCookieUNme = true;
+    }
+  }
+  getCookie(cname) {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+
+}

@@ -1,0 +1,610 @@
+import { LoginService } from './../../services/login-service/login.service';
+import { ProviderDetailService } from './../../services/provider-details-service/provider-detail.service';
+import { providerSympthemSpeciality, providerSpeciality, uniqueSpeciality, RespSearchMultiProviderwithtimeSlot } from './../../models/provider-details/provider-details';
+import { SympthemsList } from './../../models/patient/patient';
+import { Component, OnInit, ViewChild, ComponentRef, ViewContainerRef, ComponentFactoryResolver } from '@angular/core';
+import { Router } from '../../../../node_modules/@angular/router';
+import { DataInjectableService } from '../../shared/data-injectable.service';
+import { OwlOptions } from 'ngx-owl-carousel-o';
+import { ToastrService } from 'ngx-toastr';
+import { NgxSpinnerService } from 'ngx-spinner';
+import { PatientService } from '../../services/patient/patient.service';
+import { initialPatientData } from '../../models/patient/patient';
+import { ImageBase, ProviderLink } from '../../generic/generic-utility';
+import {DependentsComponent} from './../dependents/dependents.component'
+import { InputValidations } from '../../generic/mdutills.service';
+import { userLoginInfo, userCellNo } from '../../models/login/login';
+import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { EventEmitterService } from '../../services/refresh-profile-picture.service';
+$(function() {
+  $(window).on("scroll", function() {
+      if($(window).scrollTop() > 50) {
+          $(".header").addClass("bg-primary");
+      } else {
+          //remove the background property so it comes transparent again (defined in your css)
+         $(".header").removeClass("bg-primary");
+      }
+  });
+});
+
+declare var $;
+@Component({
+  selector: 'app-mainlanding',
+  templateUrl: './mainlanding.component.html',
+  styleUrls: ['./mainlanding.component.sass']
+})
+export class MainlandingComponent implements OnInit {
+  @ViewChild('dependentsmodal', { read: ViewContainerRef }) dependentsmodal: ViewContainerRef;
+
+  customOptionsSpe: OwlOptions = {
+    loop: true,
+    margin: 10,
+    navText: ['', ''],
+    responsive: {
+      0: {
+        items: 2,
+        nav: false
+    },
+    600: {
+        items: 4,
+        nav: false
+    },
+    800: {
+        items: 4,
+        nav: false
+    },
+    1000: {
+        items: 6,
+        nav: false,
+        loop: false
+    },
+    1200: {
+        items: 8,
+        nav: false,
+        loop: false
+    }
+    },
+    
+  }
+  customOptionsDoctors: OwlOptions = {
+    loop: true,
+    margin: 25,
+    navText: ['', ''],
+    responsive: {
+      0: {
+        items: 1,
+    },
+    786: {
+        items: 3,
+        nav: false
+    },
+    1000: {
+        items: 3,
+        loop: false
+    },
+    1370: {
+        items: 4,
+        loop: false
+    }
+    },
+   
+  }
+
+
+  @ViewChild("CellNumberModal", { static: false, read: ViewContainerRef }) CellNumberModal: ViewContainerRef;
+  cmpRef: ComponentRef<any>;
+  
+  avatarsm: string;
+  isTokenValid: boolean;
+  providerSymptomsName: string;
+  YearAllRight: number;
+
+  uniqueSpeciality: uniqueSpeciality;
+  providerListRequest: uniqueSpeciality;
+  initial_Patient_date : initialPatientData;
+  inputValidations: InputValidations;
+  UserLoginInfo: userCellNo;
+  providerSpeciality: providerSpeciality[];
+  PhoneNumberForm:FormGroup;
+  LoginByCellNumberForm: FormGroup;
+  ValidCellNO: boolean;
+  providerSympthemSpecialitylist: any[];
+  providerSympthemSpeciality: providerSympthemSpeciality[];
+  sympthemsList : SympthemsList[];
+  RespSearchMultiProviderwithtimeSlot: RespSearchMultiProviderwithtimeSlot[];
+  config = {
+    backdrop: true,
+    ignoreBackdropClick: true,
+    keyboard: false,
+  };
+  TextOfMoreOrLess: string="More";
+  constructor(private loginServices:LoginService,private spinner: NgxSpinnerService,private _router: Router, private DataService: ProviderDetailService, 
+    private objInjectable: DataInjectableService, private componentFactoryResolver: ComponentFactoryResolver, private toastr: ToastrService, private eventEmitterService: EventEmitterService,
+    private DataServicePatient: PatientService) {
+    this.providerSympthemSpeciality = [];
+    this.providerSympthemSpecialitylist = [];
+    this.sympthemsList=[];
+    this.providerSpeciality = [];
+    this.isTokenValid = false;
+    this.uniqueSpeciality = new uniqueSpeciality();
+    this.initial_Patient_date = new initialPatientData();
+    this.inputValidations = new InputValidations();
+    this.YearAllRight = new Date().getFullYear();
+    this.UserLoginInfo = new userLoginInfo();
+    this.ValidCellNO = false;
+    this.CreatePhoneNumberForm();
+    this.loginServices.ShowLoginButton.subscribe(
+      message => {
+        
+        this.isTokenValid=message;
+      })
+
+
+      let user_Token = sessionStorage.getItem('AuthToken');
+      if(user_Token){
+          this._router.navigate(['/home']);
+      }
+      
+  }
+    CreatePhoneNumberForm() {
+   // let cellNoRegex = /^((\+92)|(0092))-{0,1}\d{10}$|^3(\d{10})|[0-9]{3}[0-9]{3}[0-9]{4}$/;
+    let cellNoRegex = /^3(\d{9})$/;
+    this.PhoneNumberForm = new FormGroup({
+      // CellNumber: new FormControl("", [Validators.required, Validators.pattern(cellNoRegex)]),
+      CellNumber: new FormControl("", [Validators.required, Validators.pattern(cellNoRegex)])
+      
+    });
+  }
+
+  LoginByPhoneNo() {
+    
+    let no = this.UserLoginInfo.CellNumber;
+    let re = new RegExp(/^3(\d{9})$/);
+    if(!re.test(no)){
+      this.toastr.error('Please enter valid cell number.', 'Error', { enableHtml: true });
+  
+    }
+    else{
+      this.sendAppLinkViaSMS();
+    }
+
+    // if(Number(this.UserLoginInfo.CellNumber)){
+    //   this.ValidCellNO = false;
+    //   this.toastr.error('Please enter valid cell number and password', 'Error', { enableHtml: true });
+    //
+    
+  }
+
+  // validateAllFormFields(formGroup: FormGroup) {
+  //   Object.keys(formGroup.controls).forEach(field => {
+  //     const control = formGroup.get(field);
+  //     if (control instanceof FormControl) {
+  //       control.markAsTouched({ onlySelf: true });
+  //     } else if (control instanceof FormGroup) {
+  //       this.validateAllFormFields(control);
+  //     }
+  //   });
+  // }
+  // validateAllFormFields1(formGroup: FormGroup) {
+  //   Object.keys(formGroup.controls).forEach(field => {
+  //     const control = formGroup.get(field);
+  //     if (control instanceof FormControl) {
+  //       control.markAsUntouched({ onlySelf: true });
+  //       control.markAsPristine({ onlySelf: true });
+  //     } else if (control instanceof FormGroup) {
+  //       this.validateAllFormFields(control);
+  //     }
+  //   });
+  // }
+
+  toTop(event) {
+    document.getElementById("content").scrollIntoView();
+  }
+  ngOnInit(): void {
+    // Use For NavBar
+     this.eventEmitterService.onButtonClick();
+    
+     // console.log('Current URL ---- '+this._router.url);
+    this.inputValidations.closeModal();
+    let user_Token = sessionStorage.getItem('AuthToken');
+    if (user_Token) {
+      this.isTokenValid = true;
+      this.getPatientInformation();
+    }
+
+     // Use For NavBar
+      this.eventEmitterService.onButtonClick();
+      
+    this.getProSpecSympName();
+    this.getSpecialities();
+  
+  }
+  getPatientInformation(){
+
+    var patientInfo1 = this.DataServicePatient.getInitialPatientInfo()
+    .subscribe(
+      res=>{
+        
+        this.initial_Patient_date = res as initialPatientData;
+
+        if(this.initial_Patient_date && this.initial_Patient_date != null && this.initial_Patient_date != undefined){
+          this.DataServicePatient.UpdateUrl(this.initial_Patient_date.Patient_Image);
+
+
+          var FilePath = "";
+          let clientDomain = "";
+          clientDomain = window.location.origin + "/";
+
+          if (clientDomain.includes('localhost') || clientDomain.includes("https://testing.talkmd.com/") || clientDomain.includes("http://testing.talkmd.com/") || clientDomain.includes("https://uatcarecloud.talkmd.com/") || clientDomain.includes("http://uatcarecloud.talkmd.com/")) {
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+          }
+          else if (clientDomain.includes("https://talkmd.com/") || clientDomain.includes("http://talkmd.com/") || clientDomain.includes("https://www.talkmd.com/") || clientDomain.includes("http://www.talkmd.com/")) {
+            // FilePath = "WebEHR_Documents10/1013349/PATIENT PICTURE/"
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+          }
+          else if (clientDomain.includes("https://careclinic.live/") || clientDomain.includes("http://careclinic.live/") || clientDomain.includes("https://www.careclinic.live/") || clientDomain.includes("http://www.careclinic.live/")) {
+            // FilePath = "WebEHR_Documents10/1013349/PATIENT PICTURE/"
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+          }
+          else if (clientDomain.includes("https://telemedicine.mtbc.com/") || clientDomain.includes("http://telemedicine.mtbc.com/")) {
+            // FilePath = "WebEHR_Documents10/5110643/PATIENT PICTURE/"
+            FilePath = "WebEHR_Documents10/talkMDInternational/PATIENTPICTURE/"
+          }
+          
+          this.DataServicePatient.currentPatientImageUrl.subscribe(
+            message => {
+              
+              if (message != 'default message' ) {
+                if(message !=''){
+                this.avatarsm = ImageBase.BaseImageUrl + message
+                }
+                else
+                if ( this.initial_Patient_date.Patient_Image != null && this.initial_Patient_date.Patient_Image != undefined) {
+                  if (this.initial_Patient_date.Patient_Gender.toUpperCase() == "M" || this.initial_Patient_date.Patient_Gender.toUpperCase() == "MALE") {
+                    this.avatarsm = ImageBase.BaseImageUrl + FilePath + "man-avatar.png";
+                 
+                  }
+                  else if (this.initial_Patient_date.Patient_Gender.toUpperCase() == "F" || this.initial_Patient_date.Patient_Gender.toUpperCase() == "FEMALE") {
+                    this.avatarsm = ImageBase.BaseImageUrl + FilePath + "women-avatar.png";
+                  }
+                  else {
+                    this.avatarsm = ImageBase.BaseImageUrl + FilePath + "unknown-avatar.png";
+                  }
+                }
+              }
+            } 
+          )
+            
+          this.DataServicePatient.currentPatientFirstName.subscribe(
+            message => {
+              if (message != 'default message') {
+                this.initial_Patient_date.First_Name = message;
+              }
+            }
+          )
+          this.DataServicePatient.currentPatientLastName.subscribe(
+            message => {
+              if (message != 'default message') {
+                this.initial_Patient_date.Last_Name = message;
+                
+              }
+    
+            }
+          )
+        }
+      }
+    )
+  }
+
+  userLogout(){
+    sessionStorage.removeItem("AuthToken");
+    this.loginServices.UpdateIsLoggedIn(false);
+     sessionStorage.clear();
+     let link: any[] = ['login'];
+     this._router.navigate(link);
+  }
+  setDefaultPic(pic) {
+    
+    if(pic.GENDER!=null)
+    {
+      if(pic.GENDER.toLowerCase().trim()=='male')
+      {
+        pic.Profile_Pic = ImageBase.BaseImageUrl+'WebEHR_Documents10/5110643/PATIENT PICTURE/man-avatar.png';
+      }
+      else if(pic.GENDER.toLowerCase().trim()=='female'){
+        pic.Profile_Pic = ImageBase.BaseImageUrl+'WebEHR_Documents10/5110643/PATIENT PICTURE/women-avatar.png';
+      }
+      else{
+        pic.Profile_Pic = ImageBase.BaseImageUrl+'WebEHR_Documents10/5110643/PATIENT PICTURE/unknown-avatar.png';
+      }
+    }
+    else{
+      pic.Profile_Pic = ImageBase.BaseImageUrl+'WebEHR_Documents10/5110643/PATIENT PICTURE/unknown-avatar.png';
+    }
+   
+  }
+  getAllSpecialities(){
+    let link: any[] = ['specialities'];
+    this._router.navigate(link);
+  }
+  getAllSymptoms(){
+    
+    let link: any[] = ['symptoms'];
+    this._router.navigate(link);    
+  }
+  clickDependents()
+  {
+    
+    this.dependentsmodal.clear();
+    let factory = this.componentFactoryResolver.resolveComponentFactory(DependentsComponent);
+    this.cmpRef = this.dependentsmodal.createComponent(factory);
+    this.cmpRef.instance.getDependentPatientInformation();
+    this.cmpRef.instance.isShowModal=true;
+    //$("#Modal-Switch-Users").modal('show');
+  }
+  ClickSignup()
+  {
+    $("#Modal-Phone-Verification").modal('show');
+  }
+  getProviderList() {
+    this.spinner.show();
+    this.DataService.ProviderSpecialityDetails(this.uniqueSpeciality).subscribe(
+      response => {
+         this.spinner.hide();
+        
+        if (response) {
+
+          this.RespSearchMultiProviderwithtimeSlot = response as RespSearchMultiProviderwithtimeSlot[];
+          if(this.RespSearchMultiProviderwithtimeSlot!=null)
+          {
+            for (let pro of this.RespSearchMultiProviderwithtimeSlot){
+              pro.SingleProvider.Profile_Pic= ProviderLink.BaseImageUrl+'telemedicine-pics/provider/'+pro.SingleProvider.Profile_Pic;
+            }
+          }
+
+          
+        }
+      },
+      error => {
+        this.spinner.hide();
+      })
+
+  }
+  routePatientProfile(){
+    
+    let link: any[] = ['home/profile'];
+    this._router.navigate(link);
+  }
+  routeMedicalHistory(){
+    
+    let link: any[] = ['home/medical-history'];
+    this._router.navigate(link);
+  }
+  routeScheduleAppointment(){
+   
+    //  let link: any[] = ['home/schedule-appointment'];
+    let link: any[] = ['home/schedule-appointment','providers','all'];
+    this._router.navigate(link);
+  }
+  routeAppointmentHistory(){
+    
+    let link: any[] = ['home/appointment-history'];
+    this._router.navigate(link);
+  }
+  GoProviderProfile(prvider)
+  {
+    let link: any[] = ['/home/provider-profile', prvider.SingleProvider.PROVIDER_CODE, 'provider'];
+    this._router.navigate(link);
+  }
+  toggleInvoiceModalcall() {
+    
+    $("#Modal-Phone-Verification").modal('show');
+    
+    // this.CellNumberModal.clear();
+    // let factory = this.componentFactoryResolver.resolveComponentFactory(SignupComponent)
+    // this.cmpRef = this.CellNumberModal.createComponent(factory);
+    // this.cmpRef.instance.showCellNumberModal();
+    // this.cmpRef.instance.callFromTalkMDInternational = true;
+    // this.cmpRef.instance.call = value;
+  }
+
+
+  getSpecialities() {
+    
+    
+    this.DataService.ProviderSpecialityRequest(this.providerSpeciality).subscribe(
+      response => {
+        
+        if (response) {
+          this.providerSpeciality = response as providerSpeciality[];
+          if(this.providerSpeciality.length>0 && this.providerSpeciality!= null && this.providerSpeciality != undefined){
+            
+            for (let pro of this.providerSpeciality){
+              
+                var icn = pro.Icon;
+                pro.filledIcon = icn.replace('Icons','Icons/filled')
+            }
+
+          }
+        }
+      },
+      error => {
+
+      })
+  }
+
+  getSpecialityProviders(val) {
+      
+    if (val) {
+      this.uniqueSpeciality.specialityName = val.Name;
+      this.uniqueSpeciality.type = 'speciality';
+      this.objInjectable.emitData(this.uniqueSpeciality);
+      let type = 'speciality'
+      //let link: any[] = ['/schedule-appointment'];
+      let link: any[] = ['/schedule-appointment', this.uniqueSpeciality.specialityName, type];
+      this._router.navigate(link);
+    }
+  }
+
+  getSymptomsProviders(val){
+    
+    if (val) {
+      this.uniqueSpeciality.specialityName = val.SympthemsName;
+      this.uniqueSpeciality.type = 'symptoms';
+      this.uniqueSpeciality.code = val.SymCode;
+      this.objInjectable.emitData(this.uniqueSpeciality);
+      let type = 'symptoms'
+      let link: any[] = ['/schedule-appointment', val.SymCode, type +'-'+this.uniqueSpeciality.specialityName];
+      this._router.navigate(link);
+    }
+  }
+
+  getSymptomsProviderList(val){
+    
+    this.uniqueSpeciality.specialityName = val.ListITems;
+    this.uniqueSpeciality.code = val.SearchCode;
+    this.uniqueSpeciality.type = 'symptoms';
+    this.objInjectable.emitData(this.uniqueSpeciality);
+    // let link: any[] = ['/home'];
+    // this._router.navigate(link);
+    let type = 'symptoms'
+    let link: any[] = ['/home/schedule-appointment', this.uniqueSpeciality.code, this.uniqueSpeciality.type+'-'+this.uniqueSpeciality.specialityName];
+    this._router.navigate(link);
+  }
+
+  //start AYESHA
+  getProSpecSympName() {
+    
+
+    this.DataService.ProviderSpecialitySympRequest(this.sympthemsList).subscribe(
+      response => {
+        if (response) {
+          
+          this.sympthemsList = response as SympthemsList[];
+        }
+      },
+      error => {
+
+      })
+  }
+
+  //end AYESHA
+  searchbyDoctor(i) {
+    
+    if (i.Typess.toLowerCase() == "provider") {
+      let link: any[] = ['/home/provider-profile', i.SearchCode, 'provider'];
+      this._router.navigate(link);
+    }
+    else {
+      this.uniqueSpeciality.specialityName = i.ListITems;
+      this.uniqueSpeciality.code = i.SearchCode;
+      this.uniqueSpeciality.type = 'provider';
+      this.objInjectable.emitData(this.uniqueSpeciality);
+
+      let link: any[] = ['/home'];
+      this._router.navigate(link);
+    }
+
+  }
+  setItemFormList(event, data) {
+    
+    if (event != '' && event != null && event != undefined) {
+      if (data != '' && data != null && data != undefined) {
+        this.uniqueSpeciality.specialityName = data.ListITems;
+        this.uniqueSpeciality.code = data.SearchCode;
+        this.uniqueSpeciality.type = '';
+        this.providerSymptomsName = data.ListITems;
+        this.providerSympthemSpecialitylist = [];
+      }
+    }
+  }
+  searchProviderSpecialityName() {
+    
+    if (this.providerSymptomsName && this.providerSymptomsName.length > 0) {
+      
+      if (this.providerSymptomsName && this.providerSymptomsName != null) {
+        this.providerSympthemSpecialitylist = this.providerSympthemSpeciality.filter(x => x.ListITems.toLowerCase().includes(this.providerSymptomsName)).slice(0, 10);
+      }
+    }
+    else {
+      this.providerSympthemSpecialitylist = [];
+    }
+  }
+
+  routeSchedular(event) {
+    
+    if (event != '' && event != null && event != undefined) {
+      if (this.providerSymptomsName != '' && this.providerSymptomsName != null && this.providerSymptomsName != undefined) {
+
+        var doctorSpecSym = this.providerSympthemSpeciality.filter(x => x.ListITems == this.providerSymptomsName)
+        if(doctorSpecSym.length > 0){
+          if (doctorSpecSym[0].Typess.toLowerCase() == "provider") {
+            let link: any[] = ['/home/provider-profile', doctorSpecSym[0].SearchCode, 'provider'];
+            this._router.navigate(link);
+          }
+           else if(doctorSpecSym[0].Typess.toLowerCase() == "speciality"){
+             
+              this.uniqueSpeciality.specialityName = doctorSpecSym[0].ListITems;
+              this.uniqueSpeciality.type = 'speciality';
+              this.objInjectable.emitData(this.uniqueSpeciality);
+              // let link: any[] = ['/home'];
+              // this._router.navigate(link);
+
+              let type = 'speciality'
+             let link: any[] = ['/home/schedule-appointment', doctorSpecSym[0].ListITems, type];
+             this._router.navigate(link);
+           }
+          else {
+            this.uniqueSpeciality.specialityName = doctorSpecSym[0].ListITems;
+            this.uniqueSpeciality.code = doctorSpecSym[0].SearchCode;
+            this.uniqueSpeciality.type = 'symptoms';
+            this.objInjectable.emitData(this.uniqueSpeciality);
+  
+            // let link: any[] = ['/home'];
+            // this._router.navigate(link);
+            let type = 'symptoms'
+            let link: any[] = ['/home/schedule-appointment', doctorSpecSym[0].SearchCode, type +'-'+this.uniqueSpeciality.specialityName];
+            this._router.navigate(link);
+          }
+        }
+        else{
+          sessionStorage.setItem("Key",this.providerSymptomsName)
+          // this.uniqueSpeciality.specialityName = this.providerSymptomsName;
+          // this.uniqueSpeciality.code = "";
+          // this.uniqueSpeciality.type = 'provider';
+          // this.objInjectable.emitData(this.uniqueSpeciality);
+          this.uniqueSpeciality.specialityName = this.providerSymptomsName;
+          this.uniqueSpeciality.code = "";
+          this.uniqueSpeciality.type = 'speciality';
+
+            let link: any[] = ['/home/schedule-appointment', this.uniqueSpeciality.specialityName, this.uniqueSpeciality.type];
+             this._router.navigate(link);
+          // console.log(doctorSpecSym[0]);
+          //this.toastr.error("Please search the doctor by name, speciality or symptoms", 'Error', { enableHtml: true });
+        }
+      }
+      else {
+        this.toastr.error("Please search the doctor by name, speciality or symptoms", 'Error', { enableHtml: true });
+      }
+    }
+  }
+  MoreLessChange() {
+    
+    this.TextOfMoreOrLess = this.TextOfMoreOrLess == "More" ? "Less" : "More";
+    //   var text = $('#' + id).text();
+    //   if (text == "More") {
+    //     $('#' + id).text('Less');
+    //   }
+    //   else
+    //     $('#' + id).text('More');
+    // }
+}
+  loginButton() {
+    let link: any[] = ['/login'];
+    this._router.navigate(link);
+  }
+
+  sendAppLinkViaSMS(){
+
+  }
+}
